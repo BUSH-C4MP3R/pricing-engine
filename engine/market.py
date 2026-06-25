@@ -3,7 +3,7 @@ Market module:
 Handles competitor-based price adjustments
 """
 
-def calculate_market_adjustment(base_price, comp_min, comp_max):
+def market_adjustment(base_price, comp_min, comp_max):
     """
     Adjust price based on competitor positioning.
 

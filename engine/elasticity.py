@@ -12,12 +12,13 @@ def calculate_elasticity(price_change, volume_change):
     volume_change (float): The percentage change in volume.
 
     Returns:
-    float: The elasticity value.
+    float: The elasticity value, or 0.0 if price_change is zero.
     """
+    if price_change == 0:
+        return 0.0          # No price change → no elasticity to measure
     return volume_change / price_change
 
-
-def get_pricing_adjustment(elasticity):
+def elasticity_adjustment(elasticity):
     """
     Convert elasticity into pricing adjustment
     """

@@ -35,11 +35,22 @@ def calculate_price(product_data):
     # Step 4: Final price
     final_price = base_price * (1 + elasticity_adj + market_adj)
 
+    # Step 5: Total adjustment (all four factors combined)
+    total_adj = (
+        product_data["inflation"]   # macro cost pressure
+        + product_data["cost_change"]  # input cost change
+        + elasticity_adj            # demand sensitivity
+        + market_adj                # competitor positioning
+    )
+
     return {
         "product": product_data["product"],
         "base_price": round(base_price, 2),
+        "inflation_adj": round(product_data["inflation"], 3),
+        "cost_change_adj": round(product_data["cost_change"], 3),
         "elasticity": round(elasticity, 2),
         "elasticity_adj": round(elasticity_adj, 3),
         "market_adj": round(market_adj, 3),
+        "total_adj": round(total_adj, 3),
         "final_price": round(final_price, 2),
     }

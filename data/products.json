@@ -1,6 +1,6 @@
 [
     {
-        "product": "Biologic-A",
+        "product": "Biologics-A",
         "current_price": 100.0,
         "inflation": 0.03,
         "cost_change": 0.02,
@@ -10,9 +10,9 @@
         "volume_change": -0.30
     },
     {
-        "product": "Biologic-B",
+        "product": "Biologics-B",
         "current_price": 250.0,
-        "inflation": 0.04,
+        "inflation": 0.03,
         "cost_change": -0.01,
         "comp_min": 300.0,
         "comp_max": 340.0,
@@ -20,9 +20,9 @@
         "volume_change": -0.20
     },
     {
-        "product": "Biologic-C",
+        "product": "Biologics-C",
         "current_price": 120.0,
-        "inflation": 0.02,
+        "inflation": 0.03,
         "cost_change": 0.01,
         "comp_min": 115.0,
         "comp_max": 130.0,
@@ -30,9 +30,9 @@
         "volume_change": -0.05
     },
     {
-        "product": "Biologic-D",
+        "product": "Biologics-D",
         "current_price": 200.0,
-        "inflation": 0.05,
+        "inflation": 0.03,
         "cost_change": 0.03,
         "comp_min": 190.0,
         "comp_max": 210.0,
@@ -40,9 +40,9 @@
         "volume_change": -0.10
     },
     {
-        "product": "Biologic-E",
+        "product": "Biologics-E",
         "current_price": 50.0,
-        "inflation": 0.02,
+        "inflation": 0.03,
         "cost_change": 0.01,
         "comp_min": 53.0,
         "comp_max": 57.0,
