@@ -15,5 +15,3 @@ venv/
 
 # VS Code settings
 .vscode/
-EOF__pycache__/
-*.pyc
