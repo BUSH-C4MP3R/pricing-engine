@@ -30,5 +30,4 @@ for r in results:
         col2.metric("Cost Change", f"{r['cost_change_adj'] * 100:+.1f}%")
         col2.metric("Elasticity", f"{r['elasticity']}")
         col3.metric("Elasticity Adj", f"{r['elasticity_adj'] * 100:+.1f}%")
-        col3.metric("Market Adj", f"{r['market_adj'] * 100:+.1f}%")
         st.metric("Total Adjustment", f"{r['total_adj'] * 100:+.1f}%")

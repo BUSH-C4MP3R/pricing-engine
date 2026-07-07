@@ -1,10 +1,9 @@
 """
 Pricing engine:
-Combines base price, elasticity, and market adjustments
+Combines base price and elasticity adjustments
 """
 
 from engine.elasticity import calculate_elasticity, elasticity_adjustment
-from engine.market import market_adjustment
 
 
 def calculate_price(product_data):
@@ -25,22 +24,14 @@ def calculate_price(product_data):
 
     elasticity_adj = elasticity_adjustment(elasticity)
 
-    # Step 3: Market adjustment
-    market_adj = market_adjustment(
-        base_price,
-        product_data["comp_min"],
-        product_data["comp_max"]
-    )
+    # Step 3: Final price
+    final_price = base_price * (1 + elasticity_adj)
 
-    # Step 4: Final price
-    final_price = base_price * (1 + elasticity_adj + market_adj)
-
-    # Step 5: Total adjustment (all four factors combined)
+    # Step 4: Total adjustment (all factors combined)
     total_adj = (
-        product_data["inflation"]   # macro cost pressure
+        product_data["inflation"]      # macro cost pressure
         + product_data["cost_change"]  # input cost change
-        + elasticity_adj            # demand sensitivity
-        + market_adj                # competitor positioning
+        + elasticity_adj               # demand sensitivity
     )
 
     return {
@@ -50,7 +41,6 @@ def calculate_price(product_data):
         "cost_change_adj": round(product_data["cost_change"], 3),
         "elasticity": round(elasticity, 2),
         "elasticity_adj": round(elasticity_adj, 3),
-        "market_adj": round(market_adj, 3),
         "total_adj": round(total_adj, 3),
         "final_price": round(final_price, 2),
     }

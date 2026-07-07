@@ -1,7 +1,7 @@
 
 """
-Entry point: loads mock product inputs and prints pricing results.
-Swap load_mock_inputs() for the RAG loader later.
+Loads mock product inputs and prints pricing results.
+Swap mock inputs for the RAG loader later.
 """
 
 import json
@@ -29,7 +29,6 @@ def main():
         print(f"  Cost Change:    {r['cost_change_adj'] * 100:+.1f}%")
         print(f"  Elasticity:    {r['elasticity']}")
         print(f"  Elasticity Adj:{r['elasticity_adj'] * 100:+.1f}%")
-        print(f"  Market Adj:    {r['market_adj'] * 100:+.1f}%")
         print(f"  ─────────────────────────────")
         print(f"  Total Adj:     {r['total_adj'] * 100:+.1f}%")
         print(f"  Final Price:   ${r['final_price']:.2f}")
