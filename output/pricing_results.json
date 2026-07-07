@@ -1,0 +1,10 @@
+{
+    "product": "Biologics-A",
+    "base_price": 105.0,
+    "inflation_adj": 0.03,
+    "cost_change_adj": 0.02,
+    "elasticity": -3.0,
+    "elasticity_adj": -0.03,
+    "total_adj": 0.02,
+    "final_price": 101.85
+}
