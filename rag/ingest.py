@@ -1,20 +1,44 @@
 """
-Load source documents and split them into retrievable chunks.
-Drop your .txt source files into data/documents/.
+Load prose documents (generated reports + macro PDFs) and chunk them.
+The raw sales CSV is NEVER read here — only pandas touches that.
 """
 
 import os
+import pandas as pd
+from pypdf import PdfReader
 
-DOCS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "documents")
+BASE = os.path.dirname(__file__)
+REPORTS_PATH = os.path.join(BASE, "..", "data", "reports")
+MACRO_PATH = os.path.join(BASE, "..", "data", "macro")
 
 
-def load_documents(folder: str = DOCS_PATH) -> list[str]:
-    """Read all .txt files in the documents folder."""
+def _load_txt(path: str) -> str:
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def _load_pdf(path: str) -> str:
+    reader = PdfReader(path)
+    return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+
+LOADERS = {".txt": _load_txt, ".pdf": _load_pdf}
+
+
+def load_documents() -> list[str]:
+    """Read generated reports + macro PDFs into text."""
     texts = []
-    for filename in os.listdir(folder):
-        if filename.endswith(".txt"):
-            with open(os.path.join(folder, filename), encoding="utf-8") as f:
-                texts.append(f.read())
+    for folder in (REPORTS_PATH, MACRO_PATH):
+        if not os.path.isdir(folder):
+            continue
+        for fname in os.listdir(folder):
+            ext = os.path.splitext(fname)[1].lower()
+            loader = LOADERS.get(ext)
+            if loader:
+                try:
+                    texts.append(loader(os.path.join(folder, fname)))
+                except Exception as e:
+                    print(f"⚠️  Skipped {fname}: {e}")
     return texts
 
 

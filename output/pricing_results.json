@@ -1,10 +1,152 @@
-{
-    "product": "Biologics-A",
-    "base_price": 105.0,
-    "inflation_adj": 0.03,
-    "cost_change_adj": 0.02,
-    "elasticity": -3.0,
-    "elasticity_adj": -0.03,
-    "total_adj": 0.02,
-    "final_price": 101.85
-}
+[
+    {
+        "product": "iCE3 with Alcott 720 Autosampler Complete System",
+        "current_price": 112623.98,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -1.71,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.02,
+        "final_price": 114707.52
+    },
+    {
+        "product": "090-002 — Maurice C.",
+        "current_price": 123875.71,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 35.0,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 130069.5
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "046-044 — Maurice cIEF System Suitability Kit",
+        "current_price": 540.43,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 1.5,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 567.45
+    },
+    {
+        "product": "046-044 — Maurice cIEF System Suitability Kit",
+        "current_price": 540.43,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 1.5,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 567.45
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-153-R",
+        "current_price": 121305.66,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -15.38,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.02,
+        "final_price": 123549.81
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-154",
+        "current_price": 139979.26,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 1.55,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 146978.22
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    },
+    {
+        "product": "090-001",
+        "current_price": 75271.37,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.69,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 78244.59
+    }
+]
