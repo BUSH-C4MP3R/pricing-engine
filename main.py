@@ -26,37 +26,36 @@ cat output/pricing_results.json
 
 import json
 import os
-from pipeline import run_all_products, OUTPUT_PATH   # ← import batch fn + path
+from pipeline import run_all_reports, OUTPUT_PATH   # ← was run_all_products
 
 REPORTS_PATH = os.path.join(os.path.dirname(__file__), "data", "reports")
 
 
-def discover_queries() -> list[str]:
-    """Build one query per generated product report — scales automatically."""
-    queries = []
-    for fname in sorted(os.listdir(REPORTS_PATH)):
-        if fname.endswith(".txt"):
-            code = fname.replace("product_", "").replace(".txt", "")
-            queries.append(f"{code} pricing inputs")
-    return queries
+def discover_reports() -> list[str]:
+    """Return FULL PATHS to each report — no fuzzy queries, no duplicates."""
+    return [
+        os.path.join(REPORTS_PATH, f)
+        for f in sorted(os.listdir(REPORTS_PATH))
+        if f.endswith(".txt")
+    ]
+
 
 def main():
-    queries = discover_queries()                     # ← was hardcoded 3 products
-    print(f"Found {len(queries)} product reports to price.\n")
+    reports = discover_reports()                     # ← was discover_queries()
+    print(f"Found {len(reports)} product reports to price.\n")
 
-    results = run_all_products(queries)
+    results = run_all_reports(reports)               # ← was run_all_products(queries)
 
-    # Save the full batch as a JSON array
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)   # ← fixes \u2014
+        json.dump(results, f, indent=4, ensure_ascii=False)
 
     print("\n" + "=" * 60)
     print("RAG PRICING PIPELINE — RESULTS")
     print("=" * 60)
     for r in results:
         print(f"\nProduct:         {r['product']}")
-        print(f"  Current Price: ${r['current_price']:.2f}")   # ← was base_price
+        print(f"  Current Price: ${r['current_price']:.2f}")
         print(f"  Total Adj:     {r['total_adj'] * 100:+.1f}%")
         print(f"  Final Price:   ${r['final_price']:.2f}")
     print("\n" + "=" * 60)

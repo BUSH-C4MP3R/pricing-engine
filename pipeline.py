@@ -13,6 +13,7 @@ from rag.extractor import extract_product_data
 from rag.schema import validate_product
 from engine.pricing import calculate_price
 
+REPORTS_PATH = os.path.join(os.path.dirname(__file__), "data", "reports")
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "output", "pricing_results.json")
 
 def build_vector_store() -> VectorStore:
@@ -31,6 +32,26 @@ def price_product(store: VectorStore, product_query: str) -> dict:
     clean_data = validate_product(raw_data)
     return calculate_price(clean_data)
 
+def price_report_file(filepath: str) -> dict:
+    """Price ONE known report by reading it DIRECTLY — no fuzzy retrieval."""
+    with open(filepath, "r", encoding="utf-8") as f:
+        context = f.read()                       # ← the exact file, guaranteed
+    raw_data = extract_product_data(context)     # LLM still parses the numbers
+    clean_data = validate_product(raw_data)
+    return calculate_price(clean_data)
+
+
+def run_all_reports(report_files: list[str]) -> list[dict]:
+    """Price MANY reports, each read directly from disk (deterministic)."""
+    results = []
+    for path in report_files:
+        name = os.path.basename(path)
+        try:
+            results.append(price_report_file(path))
+            print(f"✅ Priced: {name}")
+        except (ValueError, TypeError) as e:
+            print(f"⚠️  Skipped '{name}': {e}")
+    return results
 
 def run_pipeline(product_query: str) -> dict:
     """Convenience: build store + price a single product."""

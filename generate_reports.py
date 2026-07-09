@@ -1,5 +1,5 @@
 """
-Turn the raw sales CSV into small per-product prose reports.
+Turn the raw sales CSV into per-category prose reports.
 pandas does the math (deterministic); RAG later reads the .txt output.
 
 Run:  python generate_reports.py
@@ -7,89 +7,81 @@ Run:  python generate_reports.py
 
 import os
 import pandas as pd
+from engine.categories import classify
 
 CSV = "data/sales/Biologics Sales Data_2020-2026.csv"
 OUT = "data/reports"
-TOP_N = 15                             # only report highest-revenue products
-INFLATION, COST_CHANGE = 0.03, 0.02    # placeholder — later from macro PDFs
 
 
 def load_and_clean(path: str) -> pd.DataFrame:
-    """Load CSV and apply all data-quality rules."""
+    """Load the CSV, drop junk, add Year + Category columns."""
     df = pd.read_csv(path)
 
-    # Rule 1: drop junk export footer + blank date rows
+    # drop footer / blank dates
     df = df[df["OrderDate"].notna()]
     df = df[~df["OrderDate"].astype(str).str.startswith("Exported")]
 
-    # Rule 2: correct types
+    # types
     df["OrderDate"] = pd.to_datetime(df["OrderDate"], errors="coerce")
     df["ShippedQty"] = pd.to_numeric(df["ShippedQty"], errors="coerce")
     df["ReportingSalesPrice"] = pd.to_numeric(
         df["ReportingSalesPrice"], errors="coerce")
-    df = df.dropna(subset=["OrderDate", "ShippedQty",
-                           "ReportingSalesPrice", "ItemCode"])
+    df = df.dropna(subset=["OrderDate", "ShippedQty", "ReportingSalesPrice"])
 
-    # Rule 3: drop returns / credit notes (negatives) + zero-shipped
+    # real positive sales only
     df = df[(df["ShippedQty"] > 0) & (df["ReportingSalesPrice"] > 0)]
 
     df["Year"] = df["OrderDate"].dt.year
+    df["ProdGroup"] = df.apply(classify, axis=1)      
     return df
 
 
-def product_yearly(df: pd.DataFrame, item_code: str) -> pd.DataFrame:
-    """Aggregate one product's transactions into a per-year table."""
-    p = df[df["ItemCode"] == item_code]
-    yearly = p.groupby("Year").agg(
-        revenue=("ReportingSalesPrice", "sum"),   # USD line totals
+def category_yearly(df: pd.DataFrame, cat: str) -> pd.DataFrame:
+    c = df[df["ProdGroup"] == cat]                    
+    yearly = c.groupby("Year").agg(
+        revenue=("ReportingSalesPrice", "sum"),
         units=("ShippedQty", "sum"),
     )
-    yearly["avg_price"] = yearly["revenue"] / yearly["units"]  # unit price
+    yearly["avg_price"] = yearly["revenue"] / yearly["units"]
     return yearly.sort_index()
 
 
-def write_report(df: pd.DataFrame, item_code: str) -> bool:
-    """Write one prose report if the product has >= 2 complete years."""
-    yearly = product_yearly(df, item_code)
-    if len(yearly) < 2:
-        return False
+def _safe(name: str) -> str:
+    """'Maurice / Consumables' -> 'Maurice_Consumables' for a filename."""
+    return name.replace(" / ", "_").replace(" ", "").replace("-", "")
 
-    # Skip the current partial year (e.g. 2026) so YoY is fair.
+
+def write_report(df: pd.DataFrame, cat: str) -> bool:
+    yearly = category_yearly(df, cat)
     complete = yearly[yearly.index < pd.Timestamp.now().year]
     if len(complete) < 2:
-        complete = yearly                      # fallback if little history
-    latest, prior = complete.iloc[-1], complete.iloc[-2]
+        return False
 
+    latest, prior = complete.iloc[-1], complete.iloc[-2]
     price_chg = (latest["avg_price"] - prior["avg_price"]) / prior["avg_price"]
     vol_chg = (latest["units"] - prior["units"]) / prior["units"]
-
-    desc = str(df[df["ItemCode"] == item_code]["ItemDesc"].iloc[-1])
     year = int(complete.index[-1])
 
-    report = f"""Product Report: {item_code} — {desc}
+    report = f"""Product Report: {cat}
 
-The current average selling price for {item_code} is ${latest['avg_price']:.2f} per unit (FY{year}).
-Macro inflation is running at {INFLATION*100:.0f}% ({INFLATION}).
-Input manufacturing costs increased by {COST_CHANGE*100:.0f}% ({COST_CHANGE}).
+The current average selling price for {cat} is ${latest['avg_price']:.2f} per unit (FY{year}).
+Macro inflation is running at 3% (0.03).
+Input manufacturing costs increased by 2% (0.02).
 The last price change applied was {price_chg*100:.0f}% ({price_chg:.2f}) year-over-year.
 Following that change, unit volume moved {vol_chg*100:.0f}% ({vol_chg:.2f}) versus the prior year.
 """
     os.makedirs(OUT, exist_ok=True)
-    safe = item_code.replace("/", "-")
-    with open(f"{OUT}/product_{safe}.txt", "w", encoding="utf-8") as f:
+    with open(f"{OUT}/product_{_safe(cat)}.txt", "w", encoding="utf-8") as f:
         f.write(report)
     return True
 
 
 def main():
     df = load_and_clean(CSV)
-
-    top = (df.groupby("ItemCode")["ReportingSalesPrice"]
-             .sum().sort_values(ascending=False).head(TOP_N).index)
-
-    written = sum(write_report(df, code) for code in top)
-    print(f"✅ Wrote {written} reports to {OUT}/")
-    print("   Next: run python pipeline.py")
+    cats = sorted(c for c in df["ProdGroup"].unique() if "Other" not in c)  # ← was df["Category"]
+    written = sum(write_report(df, cat) for cat in cats)
+    print(f"✅ Wrote {written} category reports to {OUT}/")
+    print("   Next: run python main.py")
 
 
 if __name__ == "__main__":

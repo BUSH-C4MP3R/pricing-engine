@@ -1,152 +1,92 @@
 [
     {
-        "product": "iCE3 with Alcott 720 Autosampler Complete System",
-        "current_price": 112623.98,
+        "product": "Maurice / Consumables",
+        "current_price": 296.2,
         "inflation": 0.03,
         "cost_change": 0.02,
-        "elasticity": -1.71,
+        "elasticity": 2.17,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 311.01
+    },
+    {
+        "product": "Maurice / Consumables - Cart",
+        "current_price": 195.75,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 2.14,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 205.54
+    },
+    {
+        "product": "Maurice / Service",
+        "current_price": 1190.46,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": 4.0,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.05,
+        "final_price": 1249.98
+    },
+    {
+        "product": "Maurice / Units",
+        "current_price": 153125.03,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.67,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.04,
+        "final_price": 159173.47
+    },
+    {
+        "product": "iCE3 / Consumables",
+        "current_price": 230.28,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -0.82,
+        "elasticity_adj": -0.02,
+        "total_adj": 0.03,
+        "final_price": 236.96
+    },
+    {
+        "product": "iCE3 / Consumables - Cart",
+        "current_price": 172.74,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -1.19,
+        "elasticity_adj": -0.02,
+        "total_adj": 0.03,
+        "final_price": 177.75
+    },
+    {
+        "product": "iCE3 / Service",
+        "current_price": 2958.83,
+        "inflation": 0.03,
+        "cost_change": 0.02,
+        "elasticity": -6.78,
         "elasticity_adj": -0.03,
         "total_adj": 0.02,
-        "final_price": 114707.52
+        "final_price": 3013.57
     },
     {
-        "product": "090-002 — Maurice C.",
-        "current_price": 123875.71,
+        "product": "iCE3 / Service Contracts",
+        "current_price": 428.33,
         "inflation": 0.03,
         "cost_change": 0.02,
-        "elasticity": 35.0,
+        "elasticity": 0.0,
         "elasticity_adj": 0.0,
         "total_adj": 0.05,
-        "final_price": 130069.5
+        "final_price": 449.75
     },
     {
-        "product": "090-001",
-        "current_price": 75271.37,
+        "product": "iCE3 / Units",
+        "current_price": 105811.99,
         "inflation": 0.03,
         "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "046-044 — Maurice cIEF System Suitability Kit",
-        "current_price": 540.43,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 1.5,
+        "elasticity": 0.0,
         "elasticity_adj": 0.0,
         "total_adj": 0.05,
-        "final_price": 567.45
-    },
-    {
-        "product": "046-044 — Maurice cIEF System Suitability Kit",
-        "current_price": 540.43,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 1.5,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 567.45
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-153-R",
-        "current_price": 121305.66,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -15.38,
-        "elasticity_adj": -0.03,
-        "total_adj": 0.02,
-        "final_price": 123549.81
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-154",
-        "current_price": 139979.26,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 1.55,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 146978.22
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
-    },
-    {
-        "product": "090-001",
-        "current_price": 75271.37,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.69,
-        "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 78244.59
+        "final_price": 111102.59
     }
 ]
