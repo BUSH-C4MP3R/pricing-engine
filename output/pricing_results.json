@@ -1,92 +1,92 @@
 [
     {
         "product": "Maurice / Consumables",
-        "current_price": 296.2,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 2.17,
+        "current_price": 500.0,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": 2.18,
         "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 311.01
+        "total_adj": 0.04,
+        "final_price": 520.0
     },
     {
         "product": "Maurice / Consumables - Cart",
-        "current_price": 195.75,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 2.14,
+        "current_price": 1700.0,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": 2.09,
         "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 205.54
+        "total_adj": 0.04,
+        "final_price": 1768.0
     },
     {
         "product": "Maurice / Service",
         "current_price": 1190.46,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": 4.0,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": 3.66,
         "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 1249.98
+        "total_adj": 0.04,
+        "final_price": 1238.08
     },
     {
         "product": "Maurice / Units",
-        "current_price": 153125.03,
-        "inflation": 0.03,
-        "cost_change": 0.02,
+        "current_price": 150000.0,
+        "inflation": 0.037,
+        "cost_change": 0.0,
         "elasticity": -0.67,
         "elasticity_adj": -0.01,
-        "total_adj": 0.04,
-        "final_price": 159173.47
+        "total_adj": 0.027,
+        "final_price": 154125.0
     },
     {
         "product": "iCE3 / Consumables",
-        "current_price": 230.28,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -0.82,
+        "current_price": 500.0,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": -0.84,
         "elasticity_adj": -0.02,
-        "total_adj": 0.03,
-        "final_price": 236.96
+        "total_adj": 0.02,
+        "final_price": 510.0
     },
     {
         "product": "iCE3 / Consumables - Cart",
-        "current_price": 172.74,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -1.19,
+        "current_price": 1200.0,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": -1.15,
         "elasticity_adj": -0.02,
-        "total_adj": 0.03,
-        "final_price": 177.75
+        "total_adj": 0.02,
+        "final_price": 1224.0
     },
     {
         "product": "iCE3 / Service",
         "current_price": 2958.83,
-        "inflation": 0.03,
-        "cost_change": 0.02,
-        "elasticity": -6.78,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": -7.0,
         "elasticity_adj": -0.03,
-        "total_adj": 0.02,
-        "final_price": 3013.57
+        "total_adj": 0.01,
+        "final_price": 2988.42
     },
     {
         "product": "iCE3 / Service Contracts",
         "current_price": 428.33,
-        "inflation": 0.03,
-        "cost_change": 0.02,
+        "inflation": 0.04,
+        "cost_change": 0.0,
         "elasticity": 0.0,
         "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 449.75
+        "total_adj": 0.04,
+        "final_price": 445.46
     },
     {
         "product": "iCE3 / Units",
         "current_price": 105811.99,
-        "inflation": 0.03,
-        "cost_change": 0.02,
+        "inflation": 0.037,
+        "cost_change": 0.0,
         "elasticity": 0.0,
         "elasticity_adj": 0.0,
-        "total_adj": 0.05,
-        "final_price": 111102.59
+        "total_adj": 0.037,
+        "final_price": 109779.94
     }
 ]

@@ -1,14 +1,14 @@
 """
-Load prose documents (generated reports + macro PDFs) and chunk them.
+Load macro PDFs/text (inflation, cost-change commentary) and chunk them.
+This is the ONLY unstructured source RAG operates on — pandas-derived
+sales numbers flow straight into pricing without ever passing through here.
 The raw sales CSV is NEVER read here — only pandas touches that.
 """
 
 import os
-import pandas as pd
 from pypdf import PdfReader
 
 BASE = os.path.dirname(__file__)
-REPORTS_PATH = os.path.join(BASE, "..", "data", "reports")
 MACRO_PATH = os.path.join(BASE, "..", "data", "macro")
 
 
@@ -26,17 +26,15 @@ LOADERS = {".txt": _load_txt, ".pdf": _load_pdf}
 
 
 def load_documents() -> list[str]:
-    """Read generated reports + macro PDFs into text."""
+    """Read macro PDFs/text into raw text."""
     texts = []
-    for folder in (REPORTS_PATH, MACRO_PATH):
-        if not os.path.isdir(folder):
-            continue
-        for fname in os.listdir(folder):
+    if os.path.isdir(MACRO_PATH):
+        for fname in os.listdir(MACRO_PATH):
             ext = os.path.splitext(fname)[1].lower()
             loader = LOADERS.get(ext)
             if loader:
                 try:
-                    texts.append(loader(os.path.join(folder, fname)))
+                    texts.append(loader(os.path.join(MACRO_PATH, fname)))
                 except Exception as e:
                     print(f"⚠️  Skipped {fname}: {e}")
     return texts

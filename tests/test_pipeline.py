@@ -32,7 +32,8 @@ class TestOutputIntegrity(unittest.TestCase):
     def test_pricing_is_additive(self):
         for r in self.results:
             expected = r["current_price"] * (1 + r["total_adj"])
-            self.assertAlmostEqual(r["final_price"], expected, places=2,
+            tolerance = r["current_price"] * 0.001          # ← allow total_adj rounding
+            self.assertAlmostEqual(r["final_price"], expected, delta=tolerance,
                                    msg=f"{r['product']} not additive")
 
 

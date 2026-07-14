@@ -26,8 +26,8 @@ def calculate_price(product_data):
 
     # Step 3: Total adjustment + final price
     total_adj = product_data["inflation"] + product_data["cost_change"] + elasticity_adj
-    final_price = base_price * (1 + elasticity_adj)
-    
+    final_price = product_data["current_price"] * (1 + total_adj)
+
     return {
         "product": product_data["product"],
         "current_price": round(product_data["current_price"], 2),

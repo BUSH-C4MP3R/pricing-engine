@@ -26,25 +26,12 @@ cat output/pricing_results.json
 
 import json
 import os
-from pipeline import run_all_reports, OUTPUT_PATH   # ← was run_all_products
-
-REPORTS_PATH = os.path.join(os.path.dirname(__file__), "data", "reports")
-
-
-def discover_reports() -> list[str]:
-    """Return FULL PATHS to each report — no fuzzy queries, no duplicates."""
-    return [
-        os.path.join(REPORTS_PATH, f)
-        for f in sorted(os.listdir(REPORTS_PATH))
-        if f.endswith(".txt")
-    ]
+from pipeline import run_all_categories, OUTPUT_PATH
 
 
 def main():
-    reports = discover_reports()                     # ← was discover_queries()
-    print(f"Found {len(reports)} product reports to price.\n")
-
-    results = run_all_reports(reports)               # ← was run_all_products(queries)
+    results = run_all_categories()
+    print(f"Priced {len(results)} categories.\n")
 
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:

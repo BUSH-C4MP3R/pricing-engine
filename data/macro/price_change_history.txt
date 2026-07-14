@@ -1,0 +1,23 @@
+Historical Price Change % by Product Line and Category
+Date columns, in order: Oct-23, January 2025, July 2025, January 2026
+A dash (-) means no price change was applied in that period (or the line was discontinued).
+
+iCE3
+  Units (DISCONTINUED): -, -, -, -
+  Consumables: -, 4%, 3%, 4%
+  Consumables - FC Cart: -, 8%, 5%, 8%
+  Service: -, 6%, -, 6%
+  Service Contracts: -, 6%, -, 4%
+
+Maurice
+  Units: 2%, 6%, 5%, 4%
+  Consumables: 10%, 4%, 3%, 5.5%
+  Consumables - Cart Only: -, 2%, 3%, 3%
+  Service: 10%, 6%, -, 6%
+  Service Contracts: 10%, 6%, -, 4%
+
+MFI
+  Units: 2%, 5%, -, 3%
+  Consumables: 10%, 5%, 3%, 6%
+  Service: 10%, 5%, -, 6%
+  Service Contracts: 10%, 5%, -, 4%
