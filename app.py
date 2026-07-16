@@ -8,7 +8,7 @@ import os
 
 import streamlit as st
 
-from generate_reports import CSV, load_and_clean, load_reference_prices
+from generate_reports import CSV, load_and_clean
 from pipeline import (
     DEFAULT_INFLATION,
     MACRO_BUCKETS,
@@ -16,6 +16,7 @@ from pipeline import (
     get_macro_factors,
     price_category,
 )
+from engine.categories import is_priceable
 from rag.ingest import MACRO_PATH
 
 st.set_page_config(page_title="Biologics Pricing Engine", layout="wide")
@@ -28,7 +29,9 @@ def _load_df():
 
 
 def _categories(df):
-    return sorted(c for c in df["ProdGroup"].unique() if "Other" not in c)
+    return sorted(
+        c for c in df["ProdGroup"].unique() if "Other" not in c and is_priceable(c)
+    )
 
 
 if "macro_extracted" not in st.session_state:
@@ -58,7 +61,6 @@ if st.sidebar.button("🔄 Reload sales CSV"):
 
 df = _load_df()
 cats = _categories(df)
-reference_prices = load_reference_prices()
 
 # ---------------- Sidebar: macro documents ----------------
 st.sidebar.header("Macro Documents")
@@ -125,7 +127,7 @@ if st.button("▶️ Run Pricing", type="primary"):
         results = []
         for cat in cats:
             try:
-                results.append(price_category(df, cat, macro_final, reference_prices))
+                results.append(price_category(df, cat, macro_final))
             except (ValueError, TypeError) as e:
                 st.warning(f"Skipped '{cat}': {e}")
         st.session_state.results = results

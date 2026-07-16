@@ -1,63 +1,63 @@
 [
     {
         "product": "Maurice / Consumables",
-        "current_price": 500.0,
+        "current_price": 304.92,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": 2.18,
+        "elasticity": 2.38,
         "elasticity_adj": 0.0,
         "total_adj": 0.04,
-        "final_price": 520.0
+        "final_price": 317.12
     },
     {
         "product": "Maurice / Consumables - Cart",
-        "current_price": 1700.0,
+        "current_price": 1663.93,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": 2.09,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.04,
-        "final_price": 1768.0
+        "elasticity": -8.82,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.01,
+        "final_price": 1680.57
     },
     {
         "product": "Maurice / Service",
-        "current_price": 1190.46,
+        "current_price": 2049.59,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": 3.66,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.04,
-        "final_price": 1238.08
+        "elasticity": -3.85,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.01,
+        "final_price": 2070.09
     },
     {
         "product": "Maurice / Units",
-        "current_price": 150000.0,
+        "current_price": 161953.5,
         "inflation": 0.037,
         "cost_change": 0.0,
         "elasticity": -0.67,
         "elasticity_adj": -0.01,
         "total_adj": 0.027,
-        "final_price": 154125.0
+        "final_price": 166407.22
     },
     {
         "product": "iCE3 / Consumables",
-        "current_price": 500.0,
+        "current_price": 247.79,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -0.84,
+        "elasticity": -0.85,
         "elasticity_adj": -0.02,
         "total_adj": 0.02,
-        "final_price": 510.0
+        "final_price": 252.75
     },
     {
         "product": "iCE3 / Consumables - Cart",
-        "current_price": 1200.0,
+        "current_price": 1276.73,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -1.15,
+        "elasticity": -1.33,
         "elasticity_adj": -0.02,
         "total_adj": 0.02,
-        "final_price": 1224.0
+        "final_price": 1302.27
     },
     {
         "product": "iCE3 / Service",
@@ -68,25 +68,5 @@
         "elasticity_adj": -0.03,
         "total_adj": 0.01,
         "final_price": 2988.42
-    },
-    {
-        "product": "iCE3 / Service Contracts",
-        "current_price": 428.33,
-        "inflation": 0.04,
-        "cost_change": 0.0,
-        "elasticity": 0.0,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.04,
-        "final_price": 445.46
-    },
-    {
-        "product": "iCE3 / Units",
-        "current_price": 105811.99,
-        "inflation": 0.037,
-        "cost_change": 0.0,
-        "elasticity": 0.0,
-        "elasticity_adj": 0.0,
-        "total_adj": 0.037,
-        "final_price": 109779.94
     }
 ]

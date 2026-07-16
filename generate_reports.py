@@ -9,22 +9,11 @@ Run:  python generate_reports.py
 
 import os
 import pandas as pd
-from engine.categories import classify
+from engine.categories import classify, resolve_shared_items
 
 CSV = "data/sales/Biologics Sales Data_2020-2026.csv"
 OUT = "data/reports"
-REFERENCE_PRICES_CSV = "data/reference_prices.csv"
-
-
-def load_reference_prices(path: str = REFERENCE_PRICES_CSV) -> dict:
-    """List/catalog prices per ProdGroup (e.g. CY26 pricing proposal), used as
-    current_price instead of the CSV-derived average selling price where
-    available. Categories not in this file fall back to the historical
-    average (see build_pricing_input)."""
-    if not os.path.exists(path):
-        return {}
-    ref = pd.read_csv(path)
-    return dict(zip(ref["ProdGroup"], ref["ListPrice"]))
+MIN_YEAR = 2022  # drop 2020-2021 — older data adds noise, not signal
 
 
 def load_and_clean(path: str) -> pd.DataFrame:
@@ -46,7 +35,9 @@ def load_and_clean(path: str) -> pd.DataFrame:
     df = df[(df["ShippedQty"] > 0) & (df["ReportingSalesPrice"] > 0)]
 
     df["Year"] = df["OrderDate"].dt.year
-    df["ProdGroup"] = df.apply(classify, axis=1)      
+    df = df[df["Year"] >= MIN_YEAR]
+    df["ProdGroup"] = df.apply(classify, axis=1)
+    df = resolve_shared_items(df)
     return df
 
 
@@ -65,43 +56,57 @@ def _safe(name: str) -> str:
     return name.replace(" / ", "_").replace(" ", "").replace("-", "")
 
 
-def build_pricing_input(df: pd.DataFrame, cat: str, reference_prices: dict | None = None) -> dict | None:
+MIN_PARTIAL_YEAR_COVERAGE = 0.5  # require >= 50% of the prorated expected volume
+
+
+def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     """Structured pricing input straight from pandas — no prose/LLM round-trip.
 
-    current_price uses the list price from reference_prices (e.g. a CY26
-    pricing proposal) when available for this category; otherwise it falls
-    back to the CSV-derived historical average selling price. Either way,
-    last_price_change/volume_change are always computed from the actual
-    historical CSV trend.
+    current_price is the average selling price from the most recent available
+    year of data, including the current (partial) year — so it's genuinely
+    current rather than lagging a year behind. But for low-volume categories a
+    partial year can be just a couple of transactions, which isn't
+    representative: if the partial year's unit count is less than
+    MIN_PARTIAL_YEAR_COVERAGE of what the prior complete year's pace would
+    predict for the same elapsed time, we fall back to the latest complete
+    year instead. last_price_change/volume_change (elasticity inputs) are
+    always computed from the last two COMPLETE years, since comparing a
+    partial year to a full year would distort the trend.
 
     Returns None if there isn't enough yearly history to compute a change.
     'inflation' is filled in by pipeline.get_macro_factors(); 'cost_change' is
     always 0.0 (retired as a separate input — see pipeline.price_category).
     """
-    reference_prices = reference_prices or {}
+    now = pd.Timestamp.now()
     yearly = category_yearly(df, cat)
-    complete = yearly[yearly.index < pd.Timestamp.now().year]
+    complete = yearly[yearly.index < now.year]
     if len(complete) < 2:
         return None
 
-    latest, prior = complete.iloc[-1], complete.iloc[-2]
-    price_chg = (latest["avg_price"] - prior["avg_price"]) / prior["avg_price"]
-    vol_chg = (latest["units"] - prior["units"]) / prior["units"]
-    current_price = reference_prices.get(cat, latest["avg_price"])
+    latest_complete, prior = complete.iloc[-1], complete.iloc[-2]
+    price_chg = (latest_complete["avg_price"] - prior["avg_price"]) / prior["avg_price"]
+    vol_chg = (latest_complete["units"] - prior["units"]) / prior["units"]
+
+    most_recent = yearly.iloc[-1]  # may be the current, partial year
+    if int(most_recent.name) == now.year:
+        elapsed_fraction = now.dayofyear / 365
+        expected_units = latest_complete["units"] * elapsed_fraction
+        if most_recent["units"] < MIN_PARTIAL_YEAR_COVERAGE * expected_units:
+            most_recent = latest_complete  # too few sales so far this year to trust
 
     return {
         "product": cat,
-        "current_price": float(current_price),
+        "current_price": float(most_recent["avg_price"]),
         "last_price_change": float(price_chg),
         "volume_change": float(vol_chg),
-        "year": int(complete.index[-1]),
+        "year": int(most_recent.name),
     }
 
 
-def write_report(df: pd.DataFrame, cat: str, reference_prices: dict | None = None) -> bool:
+def write_report(df: pd.DataFrame, cat: str) -> bool:
     """Write a human-readable prose report. Reporting artifact only —
     the pricing engine reads build_pricing_input() directly, not this file."""
-    data = build_pricing_input(df, cat, reference_prices)
+    data = build_pricing_input(df, cat)
     if data is None:
         return False
 
@@ -121,9 +126,8 @@ Following that change, unit volume moved {data['volume_change']*100:.0f}% ({data
 
 def main():
     df = load_and_clean(CSV)
-    reference_prices = load_reference_prices()
     cats = sorted(c for c in df["ProdGroup"].unique() if "Other" not in c)  # ← was df["Category"]
-    written = sum(write_report(df, cat, reference_prices) for cat in cats)
+    written = sum(write_report(df, cat) for cat in cats)
     print(f"✅ Wrote {written} category reports to {OUT}/")
     print("   Next: run python main.py")
 

@@ -14,11 +14,12 @@ Run with:  python3 pipeline.py
 import json
 import os
 
-from generate_reports import CSV, load_and_clean, build_pricing_input, load_reference_prices
+from generate_reports import CSV, load_and_clean, build_pricing_input
 from rag.ingest import load_documents, chunk_text
 from rag.vectorstore import VectorStore
 from rag.extractor import extract_macro_data
 from rag.schema import validate_product
+from engine.categories import is_priceable
 from engine.pricing import calculate_price
 
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "output", "pricing_results.json")
@@ -91,11 +92,11 @@ def get_macro_factors(buckets: list[str] = MACRO_BUCKETS) -> dict:
     return macro
 
 
-def price_category(df, cat: str, macro_by_bucket: dict, reference_prices: dict | None = None) -> dict:
-    """Price ONE category: pandas gives current_price (list price where known,
-    else historical average) and the instrument-specific historical price/
-    volume change; the inflation report gives the bucket's combined rate."""
-    data = build_pricing_input(df, cat, reference_prices)
+def price_category(df, cat: str, macro_by_bucket: dict) -> dict:
+    """Price ONE category: pandas gives current_price and the instrument-
+    specific historical price/volume change; the inflation report gives the
+    bucket's combined rate."""
+    data = build_pricing_input(df, cat)
     if data is None:
         raise ValueError(f"Not enough yearly history to price '{cat}'")
     data["inflation"] = macro_by_bucket.get(macro_bucket(cat), DEFAULT_INFLATION)
@@ -108,14 +109,15 @@ def run_all_categories() -> list[dict]:
     """Price every priceable category — each gets its own instrument-specific
     historical price change, plus its bucket's combined inflation rate."""
     df = load_and_clean(CSV)
-    reference_prices = load_reference_prices()
-    cats = sorted(c for c in df["ProdGroup"].unique() if "Other" not in c)
+    cats = sorted(
+        c for c in df["ProdGroup"].unique() if "Other" not in c and is_priceable(c)
+    )
     macro_by_bucket = get_macro_factors()
 
     results = []
     for cat in cats:
         try:
-            results.append(price_category(df, cat, macro_by_bucket, reference_prices))
+            results.append(price_category(df, cat, macro_by_bucket))
             print(f"✅ Priced: {cat}")
         except (ValueError, TypeError) as e:
             print(f"⚠️  Skipped '{cat}': {e}")
