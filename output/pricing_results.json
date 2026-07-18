@@ -4,7 +4,7 @@
         "current_price": 304.92,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": 2.38,
+        "elasticity": 0.72,
         "elasticity_adj": 0.0,
         "total_adj": 0.04,
         "final_price": 317.12
@@ -14,17 +14,17 @@
         "current_price": 1663.93,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -8.82,
-        "elasticity_adj": -0.03,
-        "total_adj": 0.01,
-        "final_price": 1680.57
+        "elasticity": -0.35,
+        "elasticity_adj": -0.01,
+        "total_adj": 0.03,
+        "final_price": 1713.85
     },
     {
         "product": "Maurice / Service",
         "current_price": 2049.59,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -3.85,
+        "elasticity": -7.14,
         "elasticity_adj": -0.03,
         "total_adj": 0.01,
         "final_price": 2070.09
@@ -34,7 +34,7 @@
         "current_price": 161953.5,
         "inflation": 0.037,
         "cost_change": 0.0,
-        "elasticity": -0.67,
+        "elasticity": -0.79,
         "elasticity_adj": -0.01,
         "total_adj": 0.027,
         "final_price": 166407.22
@@ -44,29 +44,29 @@
         "current_price": 247.79,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -0.85,
-        "elasticity_adj": -0.02,
-        "total_adj": 0.02,
-        "final_price": 252.75
+        "elasticity": -1.8,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.01,
+        "final_price": 250.27
     },
     {
         "product": "iCE3 / Consumables - Cart",
         "current_price": 1276.73,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -1.33,
-        "elasticity_adj": -0.02,
-        "total_adj": 0.02,
-        "final_price": 1302.27
+        "elasticity": -3.69,
+        "elasticity_adj": -0.03,
+        "total_adj": 0.01,
+        "final_price": 1289.5
     },
     {
         "product": "iCE3 / Service",
         "current_price": 2958.83,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -7.0,
-        "elasticity_adj": -0.03,
-        "total_adj": 0.01,
-        "final_price": 2988.42
+        "elasticity": 0.55,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.04,
+        "final_price": 3077.18
     }
 ]

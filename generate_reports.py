@@ -42,13 +42,53 @@ def load_and_clean(path: str) -> pd.DataFrame:
 
 
 def category_yearly(df: pd.DataFrame, cat: str) -> pd.DataFrame:
-    c = df[df["ProdGroup"] == cat]                    
+    c = df[df["ProdGroup"] == cat]
     yearly = c.groupby("Year").agg(
         revenue=("ReportingSalesPrice", "sum"),
         units=("ShippedQty", "sum"),
     )
     yearly["avg_price"] = yearly["revenue"] / yearly["units"]
     return yearly.sort_index()
+
+
+def item_yearly(df: pd.DataFrame, cat: str) -> pd.DataFrame:
+    """Per-item (ItemDesc) yearly revenue/units/avg_price within a category —
+    the basis for a same-item price change that isn't distorted by which SKU
+    happened to sell more in a given year (see weighted_price_change)."""
+    c = df[df["ProdGroup"] == cat]
+    yearly = c.groupby(["ItemDesc", "Year"]).agg(
+        revenue=("ReportingSalesPrice", "sum"),
+        units=("ShippedQty", "sum"),
+    )
+    yearly["avg_price"] = yearly["revenue"] / yearly["units"]
+    return yearly
+
+
+def weighted_price_change(df: pd.DataFrame, cat: str, latest_year: int, prior_year: int,
+                           fallback: float) -> float:
+    """Revenue-weighted average of each item's OWN price change between two
+    years, instead of the blended category average price ratio. A category
+    with multiple SKUs at different price points can show a big swing in its
+    blended average purely from the sales mix shifting toward a cheaper or
+    pricier SKU, even if no item's own price moved — this avoids that by
+    comparing each item to itself and weighting by its prior-year revenue.
+    Items not present in both years are excluded (matched-sample index).
+    Falls back to `fallback` (the blended ratio) if no items match."""
+    items = item_yearly(df, cat)
+    weighted_sum = 0.0
+    total_weight = 0.0
+    for item_desc in items.index.get_level_values("ItemDesc").unique():
+        if (item_desc, prior_year) not in items.index or (item_desc, latest_year) not in items.index:
+            continue
+        prior_row = items.loc[(item_desc, prior_year)]
+        latest_row = items.loc[(item_desc, latest_year)]
+        if prior_row["avg_price"] == 0:
+            continue
+        item_price_chg = (latest_row["avg_price"] - prior_row["avg_price"]) / prior_row["avg_price"]
+        weight = prior_row["revenue"]
+        weighted_sum += item_price_chg * weight
+        total_weight += weight
+    return weighted_sum / total_weight if total_weight else fallback
 
 
 def _safe(name: str) -> str:
@@ -69,9 +109,20 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     representative: if the partial year's unit count is less than
     MIN_PARTIAL_YEAR_COVERAGE of what the prior complete year's pace would
     predict for the same elapsed time, we fall back to the latest complete
-    year instead. last_price_change/volume_change (elasticity inputs) are
-    always computed from the last two COMPLETE years, since comparing a
-    partial year to a full year would distort the trend.
+    year instead.
+
+    last_price_change/volume_change (elasticity inputs) compare the latest
+    complete year against the CURRENT year (annualized to a full-year
+    run-rate) rather than the last two complete years, so the trend reflects
+    the most recent year rather than one that's already a year stale.
+    Annualizing only matters for volume_change (units is an absolute count
+    that needs scaling to be comparable to a full year) — last_price_change
+    is a ratio (avg_price = revenue/units) that's already unaffected by how
+    much of the year has elapsed. If the current year has no data at all yet,
+    falls back to comparing the last two complete years instead.
+    last_price_change uses weighted_price_change() (a same-item price index)
+    rather than the blended category average, so a shift in sales mix between
+    SKUs at different price points doesn't get misread as a price change.
 
     Returns None if there isn't enough yearly history to compute a change.
     'inflation' is filled in by pipeline.get_macro_factors(); 'cost_change' is
@@ -80,19 +131,32 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     now = pd.Timestamp.now()
     yearly = category_yearly(df, cat)
     complete = yearly[yearly.index < now.year]
-    if len(complete) < 2:
+    if len(complete) < 1:
         return None
 
-    latest_complete, prior = complete.iloc[-1], complete.iloc[-2]
-    price_chg = (latest_complete["avg_price"] - prior["avg_price"]) / prior["avg_price"]
-    vol_chg = (latest_complete["units"] - prior["units"]) / prior["units"]
+    baseline, baseline_year = complete.iloc[-1], int(complete.index[-1])  # last complete year
+
+    if now.year in yearly.index:
+        current = yearly.loc[now.year]
+        elapsed_fraction = now.dayofyear / 365
+        annualized_units = current["units"] / elapsed_fraction
+        vol_chg = (annualized_units - baseline["units"]) / baseline["units"]
+        blended_price_chg = (current["avg_price"] - baseline["avg_price"]) / baseline["avg_price"]
+        price_chg = weighted_price_change(df, cat, now.year, baseline_year, fallback=blended_price_chg)
+    elif len(complete) >= 2:
+        prior, prior_year = complete.iloc[-2], int(complete.index[-2])
+        vol_chg = (baseline["units"] - prior["units"]) / prior["units"]
+        blended_price_chg = (baseline["avg_price"] - prior["avg_price"]) / prior["avg_price"]
+        price_chg = weighted_price_change(df, cat, baseline_year, prior_year, fallback=blended_price_chg)
+    else:
+        return None
 
     most_recent = yearly.iloc[-1]  # may be the current, partial year
     if int(most_recent.name) == now.year:
         elapsed_fraction = now.dayofyear / 365
-        expected_units = latest_complete["units"] * elapsed_fraction
+        expected_units = baseline["units"] * elapsed_fraction
         if most_recent["units"] < MIN_PARTIAL_YEAR_COVERAGE * expected_units:
-            most_recent = latest_complete  # too few sales so far this year to trust
+            most_recent = baseline  # too few sales so far this year to trust
 
     return {
         "product": cat,
