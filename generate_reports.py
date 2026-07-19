@@ -98,6 +98,15 @@ def _safe(name: str) -> str:
 
 MIN_PARTIAL_YEAR_COVERAGE = 0.5  # require >= 50% of the prorated expected volume
 
+# Below this many units in either period being compared, a single extra sale
+# swings the % change too much to trust (e.g. 2 units -> 3 units looks like
+# "+50%"). Categories this thin (see Maurice / Service: 2-8 units/year) also
+# tend to be a rotating handful of unrelated items rather than one consistent
+# product, so there's no stable trend to measure. Chosen from the actual data:
+# every "real" category here clears 45+ units/year; only the Service
+# categories with a handful of transactions fall under this.
+MIN_ELASTICITY_UNITS = 20
+
 
 def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     """Structured pricing input straight from pandas — no prose/LLM round-trip.
@@ -124,6 +133,10 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     rather than the blended category average, so a shift in sales mix between
     SKUs at different price points doesn't get misread as a price change.
 
+    If either period being compared has fewer than MIN_ELASTICITY_UNITS units,
+    last_price_change/volume_change are both set to 0.0 (no elasticity signal)
+    instead of a noisy ratio — see MIN_ELASTICITY_UNITS.
+
     Returns None if there isn't enough yearly history to compute a change.
     'inflation' is filled in by pipeline.get_macro_factors(); 'cost_change' is
     always 0.0 (retired as a separate input — see pipeline.price_category).
@@ -143,13 +156,18 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
         vol_chg = (annualized_units - baseline["units"]) / baseline["units"]
         blended_price_chg = (current["avg_price"] - baseline["avg_price"]) / baseline["avg_price"]
         price_chg = weighted_price_change(df, cat, now.year, baseline_year, fallback=blended_price_chg)
+        comparison_units = annualized_units
     elif len(complete) >= 2:
         prior, prior_year = complete.iloc[-2], int(complete.index[-2])
         vol_chg = (baseline["units"] - prior["units"]) / prior["units"]
         blended_price_chg = (baseline["avg_price"] - prior["avg_price"]) / prior["avg_price"]
         price_chg = weighted_price_change(df, cat, baseline_year, prior_year, fallback=blended_price_chg)
+        comparison_units = prior["units"]
     else:
         return None
+
+    if baseline["units"] < MIN_ELASTICITY_UNITS or comparison_units < MIN_ELASTICITY_UNITS:
+        price_chg, vol_chg = 0.0, 0.0  # too few transactions to trust a % change
 
     most_recent = yearly.iloc[-1]  # may be the current, partial year
     if int(most_recent.name) == now.year:

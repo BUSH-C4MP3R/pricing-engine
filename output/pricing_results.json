@@ -24,10 +24,10 @@
         "current_price": 2049.59,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": -7.14,
-        "elasticity_adj": -0.03,
-        "total_adj": 0.01,
-        "final_price": 2070.09
+        "elasticity": 0.0,
+        "elasticity_adj": 0.0,
+        "total_adj": 0.04,
+        "final_price": 2131.58
     },
     {
         "product": "Maurice / Units",
@@ -64,7 +64,7 @@
         "current_price": 2958.83,
         "inflation": 0.04,
         "cost_change": 0.0,
-        "elasticity": 0.55,
+        "elasticity": 0.0,
         "elasticity_adj": 0.0,
         "total_adj": 0.04,
         "final_price": 3077.18
