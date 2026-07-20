@@ -144,7 +144,8 @@ if results is None and os.path.exists(OUTPUT_PATH):
 
 if results:
     st.subheader("Pricing Summary")
-    st.dataframe(results, use_container_width=True)
+    summary_rows = [{k: v for k, v in r.items() if k != "cost_change"} for r in results]
+    st.dataframe(summary_rows, use_container_width=True)
 
     st.subheader("Detailed Breakdown")
     for r in results:
@@ -152,8 +153,9 @@ if results:
             col1, col2, col3 = st.columns(3)
             col1.metric("Current Price", f"${r['current_price']:.2f}")
             col1.metric("Inflation", f"{r['inflation'] * 100:+.1f}%")
-            col2.metric("Elasticity", f"{r['elasticity']}")
+            col2.metric("Elasticity", f"{r['elasticity']}", help=r["elasticity_tier"])
             col2.metric("Elasticity Adj", f"{r['elasticity_adj'] * 100:+.1f}%")
             col3.metric("Total Adjustment", f"{r['total_adj'] * 100:+.1f}%")
+            col3.metric("Elasticity Tier", r["elasticity_tier"])
 else:
     st.info("No pricing results yet — click 'Run Pricing' above.")

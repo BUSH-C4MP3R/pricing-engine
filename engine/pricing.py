@@ -3,7 +3,7 @@ Pricing engine:
 Combines base price and elasticity adjustments
 """
 
-from engine.elasticity import calculate_elasticity, elasticity_adjustment
+from engine.elasticity import calculate_elasticity, elasticity_adjustment, elasticity_tier
 
 
 def calculate_price(product_data):
@@ -34,6 +34,7 @@ def calculate_price(product_data):
         "inflation": round(product_data["inflation"], 3),
         "cost_change": round(product_data["cost_change"], 3),
         "elasticity": round(elasticity, 2),
+        "elasticity_tier": elasticity_tier(elasticity),
         "elasticity_adj": round(elasticity_adj, 3),
         "total_adj": round(total_adj, 3),
         "final_price": round(final_price, 2),
