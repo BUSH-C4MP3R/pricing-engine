@@ -11,14 +11,15 @@ import os
 import pandas as pd
 from engine.categories import classify, resolve_shared_items
 
-CSV = "data/sales/Biologics Sales Data_2020-2026.csv"
+CSV = "data/sales/Biologics Sales Data (2)_2020-2026.csv"
 OUT = "data/reports"
 MIN_YEAR = 2022  # drop 2020-2021 — older data adds noise, not signal
 
 
 def load_and_clean(path: str) -> pd.DataFrame:
     """Load the CSV, drop junk, add Year + Category columns."""
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, encoding="latin-1")
+    df = df.rename(columns={"ItemDescription": "ItemDesc"})  # PowerBI export naming
 
     # drop footer / blank dates
     df = df[df["OrderDate"].notna()]
@@ -102,10 +103,34 @@ MIN_PARTIAL_YEAR_COVERAGE = 0.5  # require >= 50% of the prorated expected volum
 # swings the % change too much to trust (e.g. 2 units -> 3 units looks like
 # "+50%"). Categories this thin (see Maurice / Service: 2-8 units/year) also
 # tend to be a rotating handful of unrelated items rather than one consistent
-# product, so there's no stable trend to measure. Chosen from the actual data:
-# every "real" category here clears 45+ units/year; only the Service
-# categories with a handful of transactions fall under this.
-MIN_ELASTICITY_UNITS = 20
+# product, so there's no stable trend to measure.
+MIN_ELASTICITY_UNITS = 10
+
+# elasticity = volume_change / price_change — when price barely moved, this
+# ratio blows up regardless of sample size (e.g. volume down 43% on a price
+# that moved +1.3% looks like elasticity of -34). Below this price-change
+# magnitude, treat elasticity as undefined rather than a wild, meaningless
+# number.
+MIN_PRICE_CHANGE_MAGNITUDE = 0.02
+
+
+def _trend(df: pd.DataFrame, cat: str, prior, prior_year: int,
+           latest_units: float, latest_avg_price: float, latest_year: int):
+    """price_chg/vol_chg between a prior period and a latest period, plus
+    whether both sides clear MIN_ELASTICITY_UNITS and price_chg clears
+    MIN_PRICE_CHANGE_MAGNITUDE. `prior` is a category_yearly() row;
+    `latest_units`/`latest_avg_price` are passed separately since the
+    "latest" side may be an annualized current year rather than a real
+    yearly row."""
+    vol_chg = (latest_units - prior["units"]) / prior["units"]
+    blended_price_chg = (latest_avg_price - prior["avg_price"]) / prior["avg_price"]
+    price_chg = weighted_price_change(df, cat, latest_year, prior_year, fallback=blended_price_chg)
+    ok = (
+        prior["units"] >= MIN_ELASTICITY_UNITS
+        and latest_units >= MIN_ELASTICITY_UNITS
+        and abs(price_chg) >= MIN_PRICE_CHANGE_MAGNITUDE
+    )
+    return price_chg, vol_chg, ok
 
 
 def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
@@ -127,15 +152,17 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
     Annualizing only matters for volume_change (units is an absolute count
     that needs scaling to be comparable to a full year) — last_price_change
     is a ratio (avg_price = revenue/units) that's already unaffected by how
-    much of the year has elapsed. If the current year has no data at all yet,
-    falls back to comparing the last two complete years instead.
-    last_price_change uses weighted_price_change() (a same-item price index)
-    rather than the blended category average, so a shift in sales mix between
-    SKUs at different price points doesn't get misread as a price change.
+    much of the year has elapsed. last_price_change uses weighted_price_change()
+    (a same-item price index) rather than the blended category average, so a
+    shift in sales mix between SKUs at different price points doesn't get
+    misread as a price change.
 
-    If either period being compared has fewer than MIN_ELASTICITY_UNITS units,
-    last_price_change/volume_change are both set to 0.0 (no elasticity signal)
-    instead of a noisy ratio — see MIN_ELASTICITY_UNITS.
+    If either period in that comparison has fewer than MIN_ELASTICITY_UNITS
+    units (e.g. the current year is too early to have enough sales yet), we
+    fall back to comparing the last two COMPLETE years instead — which may
+    still clear the threshold even when the current year doesn't. Only if
+    neither comparison clears it do last_price_change/volume_change get set
+    to 0.0 (no elasticity signal) instead of a noisy ratio.
 
     Returns None if there isn't enough yearly history to compute a change.
     'inflation' is filled in by pipeline.get_macro_factors(); 'cost_change' is
@@ -148,26 +175,32 @@ def build_pricing_input(df: pd.DataFrame, cat: str) -> dict | None:
         return None
 
     baseline, baseline_year = complete.iloc[-1], int(complete.index[-1])  # last complete year
+    used_complete_years = False
 
     if now.year in yearly.index:
         current = yearly.loc[now.year]
         elapsed_fraction = now.dayofyear / 365
         annualized_units = current["units"] / elapsed_fraction
-        vol_chg = (annualized_units - baseline["units"]) / baseline["units"]
-        blended_price_chg = (current["avg_price"] - baseline["avg_price"]) / baseline["avg_price"]
-        price_chg = weighted_price_change(df, cat, now.year, baseline_year, fallback=blended_price_chg)
-        comparison_units = annualized_units
+        price_chg, vol_chg, ok = _trend(
+            df, cat, baseline, baseline_year, annualized_units, current["avg_price"], now.year
+        )
     elif len(complete) >= 2:
         prior, prior_year = complete.iloc[-2], int(complete.index[-2])
-        vol_chg = (baseline["units"] - prior["units"]) / prior["units"]
-        blended_price_chg = (baseline["avg_price"] - prior["avg_price"]) / prior["avg_price"]
-        price_chg = weighted_price_change(df, cat, baseline_year, prior_year, fallback=blended_price_chg)
-        comparison_units = prior["units"]
+        price_chg, vol_chg, ok = _trend(
+            df, cat, prior, prior_year, baseline["units"], baseline["avg_price"], baseline_year
+        )
+        used_complete_years = True
     else:
         return None
 
-    if baseline["units"] < MIN_ELASTICITY_UNITS or comparison_units < MIN_ELASTICITY_UNITS:
-        price_chg, vol_chg = 0.0, 0.0  # too few transactions to trust a % change
+    if not ok and not used_complete_years and len(complete) >= 2:
+        prior, prior_year = complete.iloc[-2], int(complete.index[-2])
+        price_chg, vol_chg, ok = _trend(
+            df, cat, prior, prior_year, baseline["units"], baseline["avg_price"], baseline_year
+        )
+
+    if not ok:
+        price_chg, vol_chg = 0.0, 0.0  # too few transactions, in either comparison, to trust a % change
 
     most_recent = yearly.iloc[-1]  # may be the current, partial year
     if int(most_recent.name) == now.year:

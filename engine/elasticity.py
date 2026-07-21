@@ -24,14 +24,22 @@ def calculate_elasticity(price_change, volume_change):
 # reports (too few transactions to trust — see generate_reports.build_pricing
 # _input's MIN_ELASTICITY_UNITS), and that must never be confused with a
 # genuinely-measured, strongly-inelastic 0.0.
+#
+# The outermost "Extremely Elastic"/"Extremely Inelastic" tiers exist purely
+# as more descriptive LABELS for how far out an extreme value sits — the
+# adjustment stays capped at +/-3% same as "Very Elastic"/"Highly Inelastic",
+# per the deliberate cap (see elasticity_adjustment). -5.0/+3.0 are placed
+# symmetrically around the -1.0 pivot (unit-elastic).
 _TIERS = [
+    (-5.0, -0.03, "Extremely Elastic"),
     (-3.0, -0.03, "Very Elastic"),
     (-1.5, -0.02, "Elastic"),
     (-1.2, -0.01, "Mildly Elastic"),
     (-0.8, 0.0, "Unit Elastic"),
     (0.0, 0.01, "Inelastic"),
     (1.5, 0.02, "Very Inelastic"),
-    (float("inf"), 0.03, "Highly Inelastic"),
+    (3.0, 0.03, "Highly Inelastic"),
+    (float("inf"), 0.03, "Extremely Inelastic"),
 ]
 NO_SIGNAL_TIER = "No Signal"
 

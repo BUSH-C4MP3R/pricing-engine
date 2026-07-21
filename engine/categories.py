@@ -1,5 +1,28 @@
 """Map raw transactions to the CY26 taxonomy: 'ProductLine / Category'."""
 
+import re
+
+# Matches "ice" only when NOT preceded by a letter — catches "iCE3", "iCE280",
+# a standalone "iCE" — but not "serv[ice]", "pr[ice]", "not[ice]", "dev[ice]",
+# "tw[ice]", "cho[ice]": a naive "ice" in d substring check would misfire on
+# any of those (this dataset is full of "Service"/"Price" mentions).
+_ICE_PATTERN = re.compile(r"(?<![a-z])ice")
+
+
+def _mentions_ice(d: str) -> bool:
+    return bool(_ICE_PATTERN.search(d))
+
+
+# Whole-word "Mau" is an abbreviation for Maurice used on some service items
+# (e.g. "Service Visit Tier 1 - Mau", "1 Day Labor - Mau") — word-bounded so
+# it doesn't match "mau" as a substring of another word (no false positives
+# like "mauve" found in this dataset; "maurice" itself is handled separately).
+_MAU_PATTERN = re.compile(r"\bmau\b")
+
+
+def _mentions_mau(d: str) -> bool:
+    return bool(_MAU_PATTERN.search(d))
+
 
 # iCE280/iCE3-specific parts/consumables whose descriptions don't contain
 # "ice" — confirmed via customer purchase history (overwhelmingly bought by
@@ -12,16 +35,55 @@ ICE3_SPECIFIC_ITEMS = {
 }
 
 
-def product_line(desc: str) -> str:
-    """iCE3 / Maurice / MFI — detected from the ItemDesc product name."""
+def _maurice_sub_line(d: str, mode: str) -> str:
+    """Maurice sub-classification depends on WHAT is being classified, not
+    just what the description mentions:
+    - Units: instrument variant ('Maurice C.' / 'Maurice S.' / 'Maurice Flex')
+      — PM/RQ/IQ-OQ pricing and the instrument itself are tied to a specific
+      model.
+    - Consumables (+ Cart): chemistry ('Maurice CE-SDS' / 'Maurice iCIEF') —
+      the same instrument runs either assay, and they show different
+      elasticity, but a cartridge/reagent isn't tied to one instrument model.
+    - Service / Service Contracts / Other: no sub-split — e.g. "Maurice C.
+      IQ/OQ Service" and "Maurice CE-SDS Applications Training" both just
+      fold into generic 'Maurice', regardless of the variant/chemistry named.
+    `d` is already lowercased and confirmed to contain 'maurice'."""
+    if mode == "variant":
+        if "mauriceflex" in d:
+            return "Maurice Flex"
+        if "maurice c." in d:
+            return "Maurice C."
+        if "maurice s." in d:
+            return "Maurice S."
+    elif mode == "chemistry":
+        if "ce-sds" in d:
+            return "Maurice CE-SDS"
+        if "cief" in d:
+            return "Maurice iCIEF"
+    return "Maurice"
+
+
+def product_line(desc: str, maurice_mode: str = "none") -> str:
+    """iCE3 / Maurice / MFI — detected from the ItemDesc product name.
+    `maurice_mode` ('variant' | 'chemistry' | 'none') controls how Maurice
+    items get sub-classified — see _maurice_sub_line(). classify() decides
+    the mode based on the item's category (Units/Consumables/Service)."""
     d = str(desc).lower()
-    if "maurice" in d:                       # covers 'Maurice' + 'MauriceFlex'
+    if "maurice" in d or _mentions_mau(d):    # covers 'Maurice' + 'MauriceFlex' + abbreviated 'Mau'
+        return _maurice_sub_line(d, maurice_mode)
+    if maurice_mode == "chemistry" and "ce-sds" in d:
+        # CE-SDS chemistry is exclusively Maurice's, even on items missing
+        # "maurice" in the name (e.g. "Turbo CE-SDS Running Buffer - Bottom")
+        return "Maurice CE-SDS"
+    if "obm" in d:                           # 'OBM' is a Maurice-specific configuration term
         return "Maurice"
     if "mfi" in d:
         return "MFI"
-    if "ice" in d:                           # covers 'iCE3', 'iCE280', 'iCE System'
+    if _mentions_ice(d):                     # covers 'iCE3', 'iCE280', 'iCE System'
         return "iCE3"
-    if "fc-coated" in d or "fc and ht cartridge" in d:  # iCE3's FC cartridge line
+    if "fc-coated" in d or "ht-coated" in d or "fc and ht cartridge" in d:  # iCE3's FC/HT cartridge line
+        return "iCE3"
+    if "cief" in d:                          # iCE280/iCE3 cIEF chemistry items with no "ice"/"maurice" in the name
         return "iCE3"
     if d in ICE3_SPECIFIC_ITEMS:
         return "iCE3"
@@ -30,38 +92,109 @@ def product_line(desc: str) -> str:
 
 # "Cart" = the actual cartridge product (e.g. "cIEF Cartridge, Maurice"), not
 # accessories/parts sold alongside cartridges (cleaning vials, inserts,
-# sleeves, tools) — those are priced very differently and belong in plain
-# Consumables instead.
-CARTRIDGE_ACCESSORY_KEYWORDS = ("cleaning", "insert", "sleeve", "tool", "vial", "wash")
+# sleeves, tools, qualification assemblies) — those are priced very
+# differently and belong in plain Consumables instead.
+CARTRIDGE_ACCESSORY_KEYWORDS = ("cleaning", "insert", "sleeve", "tool", "vial", "wash", "assy", "assembly")
+
+# The handful of real instrument-system SKUs — exact ItemCode match, since
+# bare model names ("Maurice", "Maurice C.", "MauriceFlex", "MFI 5100 Flow
+# Microscope System"...) have no distinguishing keyword to key off of, unlike
+# every other category here. "090-000-M" (Monthly Usage of Maurice, a
+# lease/rental fee) is deliberately excluded — it's not an instrument sale.
+UNIT_ITEM_CODES = {
+    "090-000", "090-153", "090-155", "090-153-R", "090-000-R",
+    "090-002", "090-154", "090-002-R", "090-141", "090-156",
+    "090-001", "090-158", "090-139",
+    "4000-011-001", "4000-015-001", "P-0000013-00", "P-0000014-00",
+    "004-003", "004-001", "004-005", "004-001-R",
+}
+
+# Codes for one-off services (PM/RQ/IQ-OQ events, field service labor/travel/
+# expense, day-rate labor, service visits, depot service, a one-time upgrade)
+# — this dataset has no InstConsSvc field, so ItemCode prefixes are the most
+# reliable signal (far more consistent than the free-text descriptions).
+SERVICE_CODE_PREFIXES = (
+    "pm-", "rq-", "iqoq-", "ssv", "mauremp",
+    "s-fld", "s-1day", "s-1/2day", "s-visit", "s-tm-ds", "s-mau-w11",
+)
+
+# Non-recurring charges that aren't real product/service revenue at all.
+OTHER_KEYWORDS = ("crate", "installation kit", "freight", "trade-in credit")
 
 
-def category(inst_cons_svc: str, desc: str = "") -> str:
-    """Units / Consumables / Service (+ sub-splits)."""
-    s, d = str(inst_cons_svc).lower(), str(desc).lower()
+def category(item_code: str, desc: str = "") -> str:
+    """Units / Consumables / Service (+ sub-splits) — classified from
+    ItemCode patterns and ItemDesc keywords (this dataset has no InstConsSvc
+    field to lean on, unlike the original CSV)."""
+    code, d = str(item_code).lower(), str(desc).lower()
 
-    if "crate" in d:
-        return "Other"  # freight/packaging charge, not a real service line
-    if "instrument" in s or "unit" in s:
+    if any(kw in d for kw in OTHER_KEYWORDS):
+        return "Other"  # freight/packaging/lease/trade-in — not real product/service revenue
+
+    if item_code in UNIT_ITEM_CODES:
         return "Units"
-    if "service" in s:
-        return "Service Contracts" if ("contract" in d or "plan" in d) else "Service"
-    if "consumable" in s:
-        if "cartridge" in d and not any(kw in d for kw in CARTRIDGE_ACCESSORY_KEYWORDS):
-            return "Consumables - Cart"
-        return "Consumables"
-    return "Other"
+
+    # Service Contracts: Silver/Gold/Platinum tiers are embedded right in the
+    # ItemCode (e.g. "C-MFI-GOLD", "S-MAURICE-SLVR"), which is more reliable
+    # than the description (e.g. "Platinum Electrode" is a hardware part, not
+    # a contract — its ItemCode doesn't contain "plat").
+    if any(tier in code for tier in ("gold", "silver", "slvr", "plat")):
+        return "Service Contracts"
+    if code.startswith(("reinstate", "c-")):
+        return "Service Contracts"
+    if "full coverage" in d and ("service" in d or "plan" in d):
+        return "Service Contracts"
+
+    if code.startswith(SERVICE_CODE_PREFIXES):
+        return "Service"
+    if "iq/oq" in code or "iq/oq" in d:
+        return "Service"
+    if any(kw in d for kw in (
+        "preventive maintenance", "preventative maintenance", "requalification",
+        "training", "applications support", "single service visit", "service visit",
+        "field service", "day labor", "depot service", "custom development",
+        "certification program", "installation and configuration",
+        "upgrade and qualification",
+    )):
+        return "Service"
+    if "(service)" in d:
+        return "Service"
+
+    if "cartridge" in d and not any(kw in d for kw in CARTRIDGE_ACCESSORY_KEYWORDS):
+        return "Consumables - Cart"
+    return "Consumables"
+
+
+MAURICE_MODE_BY_CATEGORY = {
+    "Units": "variant",
+    "Consumables": "chemistry",
+    "Consumables - Cart": "chemistry",
+}
 
 
 def classify(row) -> str:
     """pandas row -> 'Maurice / Consumables'."""
-    line = product_line(row.get("ItemDesc", ""))     # ← was ProductLine (cryptic codes)
-    cat = category(row.get("InstConsSvc", ""), row.get("ItemDesc", ""))
+    item_code, desc = row.get("ItemCode", ""), row.get("ItemDesc", "")
+    cat = category(item_code, desc)
+    mode = MAURICE_MODE_BY_CATEGORY.get(cat, "none")  # Service/Service Contracts/Other: no sub-split
+    line = product_line(desc, mode)
     return f"{line} / {cat}"
 
 
 # Reagents/consumables sold as a common item across instrument lines — ItemDesc
 # alone can't say which instrument a given sale was for.
-AMBIGUOUS_SHARED_ITEMS = {"1% Methyl Cellulose Solution"}
+AMBIGUOUS_SHARED_ITEMS = {
+    "1% Methyl Cellulose Solution",
+    "0.5% Methyl Cellulose Solution (2 x 100mL)",
+}
+
+
+def _base_line(line: str) -> str:
+    """'Maurice CE-SDS' / 'Maurice iCIEF' -> 'Maurice' — a shared item (like
+    the methyl cellulose reagent) can't be attributed to one chemistry, so a
+    customer who's only ever bought one sub-chemistry still just counts as a
+    'Maurice' customer for this purpose."""
+    return "Maurice" if line.startswith("Maurice") else line
 
 
 def resolve_shared_items(df):
@@ -75,11 +208,10 @@ def resolve_shared_items(df):
     if not is_shared.any():
         return df
 
-    known = df.loc[~is_shared, ["CustomerNo", "ProdGroup"]]
-    known = known[known["ProdGroup"].str.split(" / ").str[0].isin(["Maurice", "iCE3", "MFI"])]
-    cust_lines = known.groupby("CustomerNo")["ProdGroup"].apply(
-        lambda s: set(x.split(" / ")[0] for x in s)
-    )
+    known = df.loc[~is_shared, ["CustomerNo", "ProdGroup"]].copy()
+    known["Line"] = known["ProdGroup"].str.split(" / ").str[0].map(_base_line)
+    known = known[known["Line"].isin(["Maurice", "iCE3", "MFI"])]
+    cust_lines = known.groupby("CustomerNo")["Line"].apply(set)
 
     def resolve(customer_no, prod_group):
         lines = cust_lines.get(customer_no, set())
@@ -94,17 +226,23 @@ def resolve_shared_items(df):
     return df
 
 
-# iCE3 and MFI hardware instruments are discontinued — no new units are sold,
-# so that "Units" category shouldn't be priced going forward. Their
-# Consumables/Service lines remain active and priceable.
-DISCONTINUED_INSTRUMENT_LINES = {"iCE3", "MFI"}
+# iCE3's hardware instrument is discontinued — no new units are sold, so that
+# "Units" category shouldn't be priced going forward, but its Consumables/
+# Service lines remain active. MFI is discontinued entirely — omit the whole
+# line from pricing.
+DISCONTINUED_UNITS_ONLY = {"iCE3"}
+FULLY_DISCONTINUED_LINES = {"MFI"}
 
 
 def is_priceable(prod_group: str) -> bool:
-    """'Maurice / Units' -> True. Excluded: discontinued instrument lines'
-    Units, and Service Contracts for every line (its price change tracks the
-    instrument's Units price rather than being modeled independently)."""
+    """'Maurice / Units' -> True. Excluded: MFI entirely (fully discontinued),
+    iCE3's Units specifically (discontinued instrument, Consumables/Service
+    remain active), and Service Contracts for every line (its price change
+    tracks the instrument's Units price rather than being modeled
+    independently)."""
     line, _, cat = prod_group.partition(" / ")
+    if line in FULLY_DISCONTINUED_LINES:
+        return False
     if cat == "Service Contracts":
         return False
-    return not (cat == "Units" and line in DISCONTINUED_INSTRUMENT_LINES)
+    return not (cat == "Units" and line in DISCONTINUED_UNITS_ONLY)
