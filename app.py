@@ -28,10 +28,36 @@ def _load_df():
     return load_and_clean(CSV)
 
 
+# Display order for the UI (summary table + detail cards) — anything
+# priceable but not listed here (e.g. iCE3 categories) is appended after,
+# sorted alphabetically.
+CATEGORY_ORDER = [
+    "Maurice S. / Units",
+    "Maurice C. / Units",
+    "Maurice / Units",
+    "Maurice Flex / Units",
+    "Maurice / Consumables",
+    "Maurice CE-SDS / Consumables",
+    "Maurice CE-SDS / Consumables - Cart",
+    "Maurice iCIEF / Consumables",
+    "Maurice iCIEF / Consumables - Cart",
+    "Maurice / Service",
+]
+
+
 def _categories(df):
-    return sorted(
-        c for c in df["ProdGroup"].unique() if "Other" not in c and is_priceable(c)
-    )
+    available = {c for c in df["ProdGroup"].unique() if "Other" not in c and is_priceable(c)}
+    ordered = [c for c in CATEGORY_ORDER if c in available]
+    remaining = sorted(available - set(CATEGORY_ORDER))
+    return ordered + remaining
+
+
+def _sort_results(results):
+    """Apply CATEGORY_ORDER to a results list regardless of where it came
+    from — a fresh run already comes out in order, but results loaded from
+    OUTPUT_PATH (written by pipeline.py's own alphabetical run) don't."""
+    order_index = {cat: i for i, cat in enumerate(CATEGORY_ORDER)}
+    return sorted(results, key=lambda r: (order_index.get(r["product"], len(CATEGORY_ORDER)), r["product"]))
 
 
 if "macro_extracted" not in st.session_state:
@@ -143,6 +169,7 @@ if results is None and os.path.exists(OUTPUT_PATH):
         results = json.load(f)
 
 if results:
+    results = _sort_results(results)
     st.subheader("Pricing Summary")
     summary_rows = [{k: v for k, v in r.items() if k != "cost_change"} for r in results]
     st.dataframe(summary_rows, use_container_width=True)
