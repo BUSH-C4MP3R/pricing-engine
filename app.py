@@ -58,7 +58,7 @@ st.markdown(
         color: #ffffff !important;
     }
     .stTabs [data-baseweb="tab-highlight"] {
-        background-color: #00b3e5 !important;
+        background-color: #0034b7 !important;
     }
     [data-testid="stMetricValue"] {
         color: #0034b7;
@@ -67,7 +67,7 @@ st.markdown(
         color: #0034b7;
     }
     [data-testid="stExpander"] {
-        border-left: 4px solid #005f9e;
+        border-left: 4px solid #0034b7;
         border-radius: 4px;
     }
     [data-testid="stSidebar"] {
