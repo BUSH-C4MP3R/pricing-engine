@@ -3,6 +3,7 @@ Streamlit dashboard for the Biologics Pricing Engine.
 Run with:  streamlit run app.py
 """
 
+import base64
 import json
 import os
 
@@ -21,23 +22,64 @@ from rag.ingest import MACRO_PATH
 
 st.set_page_config(page_title="Biologics Pricing Engine", layout="wide")
 
+# R&D Systems by Bio-Techne logo (pulled from resources.bio-techne.com/
+# bio-techne-assets/images/homepage/rnd-by-bt-logo.svg — BT-Blue fill, so it
+# reads on the plain page background rather than needing a dark bar behind
+# it) — base64-encoded into a data: URI <img> tag rather than inlined as raw
+# <svg> markup: the raw multi-line XML confused Streamlit's markdown
+# HTML-block detection and got rendered as literal escaped text instead of
+# an actual image.
+_LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "rd-systems-by-bio-techne-logo.svg")
+with open(_LOGO_PATH, "rb") as _f:
+    _LOGO_B64 = base64.b64encode(_f.read()).decode("ascii")
+_LOGO_IMG = '<img src="data:image/svg+xml;base64,{}" class="bt-logo" alt="R&amp;D Systems by Bio-Techne">'.format(_LOGO_B64)
+
 # Bio-Techne brand palette (sourced from bio-techne.com's own CSS: bg-bt-blue /
 # text-bt-blue / bg-dark-bt-blue / --Light-Blue utility classes) — the base
 # widget theme lives in .streamlit/config.toml, this covers the masthead and
-# tab accents that config.toml's theme keys can't reach.
-st.markdown(
-    """
+# tab accents that config.toml's theme keys can't reach. Font is Inter, the
+# same body/heading typeface bio-techne.com itself uses (their site loads it
+# as self-hosted "inter_regular"/"inter_bold" — Inter is open-source, so we
+# pull it from Google Fonts instead of hotlinking their private CDN copy).
+_HEADER_HTML = """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    html, body {
+        font-family: 'Inter', sans-serif;
+    }
+    /* Fix the block-container's own side padding to a known value so the
+    topbar/header below can cancel it exactly (negative margin == this
+    padding) and truly reach the edges of the main content pane, rather than
+    guessing at whatever Streamlit's default padding happens to be. */
+    [data-testid="stMainBlockContainer"] {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    .bt-topbar {
+        display: flex;
+        justify-content: flex-start;
+        padding: 0.25rem 2rem 0.75rem 2rem;
+        margin-left: -2rem;
+        margin-right: -2rem;
+    }
+    .bt-topbar .bt-logo {
+        height: 44px;
+        width: auto;
+        display: block;
+    }
     .bt-header {
         background-color: #0034b7;
-        padding: 1.1rem 1.5rem;
-        border-radius: 6px;
+        padding: 1.5rem 2rem;
+        margin-left: -2rem;
+        margin-right: -2rem;
         margin-bottom: 1.5rem;
     }
     .bt-header h1 {
         color: #ffffff;
         margin: 0;
-        font-size: 1.75rem;
+        font-size: 2.5rem;
+        font-weight: 700;
         letter-spacing: 0.02em;
     }
     .stTabs [data-baseweb="tab-list"] {
@@ -74,10 +116,10 @@ st.markdown(
         background-color: #e8eaf0;
     }
     </style>
+    <div class="bt-topbar">__LOGO__</div>
     <div class="bt-header"><h1>Biologics Pricing Model</h1></div>
-    """,
-    unsafe_allow_html=True,
-)
+    """
+st.markdown(_HEADER_HTML.replace("__LOGO__", _LOGO_IMG), unsafe_allow_html=True)
 
 
 @st.cache_data
@@ -225,10 +267,8 @@ for col, bucket in zip(cols, MACRO_BUCKETS):
     default_value = extracted if extracted is not None else DEFAULT_INFLATION
 
     with col:
-        st.markdown(f"**{bucket}**")
-        st.caption("extracted" if extracted is not None else "_default_")
         inflation = st.number_input(
-            "Inflation", value=float(default_value), step=0.005, format="%.3f",
+            f"**{bucket}**", value=float(default_value), step=0.005, format="%.3f",
             key=f"inflation_{bucket}",
         )
     macro_final[bucket] = inflation
