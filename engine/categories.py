@@ -41,7 +41,7 @@ def _maurice_sub_line(d: str, mode: str) -> str:
     - Units: instrument variant ('Maurice C.' / 'Maurice S.' / 'Maurice Flex')
       — PM/RQ/IQ-OQ pricing and the instrument itself are tied to a specific
       model.
-    - Consumables (+ Cart): chemistry ('Maurice CE-SDS' / 'Maurice iCIEF') —
+    - Consumables (+ Cart): chemistry ('Maurice CE-SDS' / 'Maurice icIEF') —
       the same instrument runs either assay, and they show different
       elasticity, but a cartridge/reagent isn't tied to one instrument model.
     - Service / Service Contracts / Other: no sub-split — e.g. "Maurice C.
@@ -59,7 +59,7 @@ def _maurice_sub_line(d: str, mode: str) -> str:
         if "ce-sds" in d:
             return "Maurice CE-SDS"
         if "cief" in d:
-            return "Maurice iCIEF"
+            return "Maurice icIEF"
     return "Maurice"
 
 
@@ -190,7 +190,7 @@ AMBIGUOUS_SHARED_ITEMS = {
 
 
 def _base_line(line: str) -> str:
-    """'Maurice CE-SDS' / 'Maurice iCIEF' -> 'Maurice' — a shared item (like
+    """'Maurice CE-SDS' / 'Maurice icIEF' -> 'Maurice' — a shared item (like
     the methyl cellulose reagent) can't be attributed to one chemistry, so a
     customer who's only ever bought one sub-chemistry still just counts as a
     'Maurice' customer for this purpose."""
@@ -236,13 +236,11 @@ FULLY_DISCONTINUED_LINES = {"MFI"}
 
 def is_priceable(prod_group: str) -> bool:
     """'Maurice / Units' -> True. Excluded: MFI entirely (fully discontinued),
-    iCE3's Units specifically (discontinued instrument, Consumables/Service
-    remain active), and Service Contracts for every line (its price change
-    tracks the instrument's Units price rather than being modeled
-    independently)."""
+    and iCE3's Units specifically (discontinued instrument, Consumables/
+    Service/Service Contracts remain active). Service Contracts are priced
+    independently now that real Silver/Gold/Platinum plan data exists (see
+    the 2,406-row cross-line breakdown that prompted this)."""
     line, _, cat = prod_group.partition(" / ")
     if line in FULLY_DISCONTINUED_LINES:
-        return False
-    if cat == "Service Contracts":
         return False
     return not (cat == "Units" and line in DISCONTINUED_UNITS_ONLY)

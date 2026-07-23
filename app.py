@@ -29,8 +29,10 @@ def _load_df():
 
 
 # Display order for the UI (summary table + detail cards) — anything
-# priceable but not listed here (e.g. iCE3 categories) is appended after,
-# sorted alphabetically.
+# priceable but not listed here is appended after, sorted alphabetically.
+# Service Contracts sits right before its respective Service category (for
+# both Maurice and iCE3) — alphabetical order alone would put "Service"
+# before "Service Contracts", the opposite of what's wanted here.
 CATEGORY_ORDER = [
     "Maurice S. / Units",
     "Maurice C. / Units",
@@ -39,9 +41,14 @@ CATEGORY_ORDER = [
     "Maurice / Consumables",
     "Maurice CE-SDS / Consumables",
     "Maurice CE-SDS / Consumables - Cart",
-    "Maurice iCIEF / Consumables",
-    "Maurice iCIEF / Consumables - Cart",
+    "Maurice icIEF / Consumables",
+    "Maurice icIEF / Consumables - Cart",
+    "Maurice / Service Contracts",
     "Maurice / Service",
+    "iCE3 / Consumables - Cart",
+    "iCE3 / Consumables",
+    "iCE3 / Service Contracts",
+    "iCE3 / Service",
 ]
 
 

@@ -22,6 +22,17 @@
         "final_price": 6537.94
     },
     {
+        "product": "Maurice / Service Contracts",
+        "current_price": 8852.07,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": -0.62,
+        "elasticity_tier": "Inelastic",
+        "elasticity_adj": 0.01,
+        "total_adj": 0.05,
+        "final_price": 9294.68
+    },
+    {
         "product": "Maurice / Units",
         "current_price": 165655.13,
         "inflation": 0.037,
@@ -88,7 +99,7 @@
         "final_price": 79179.92
     },
     {
-        "product": "Maurice iCIEF / Consumables",
+        "product": "Maurice icIEF / Consumables",
         "current_price": 314.8,
         "inflation": 0.04,
         "cost_change": 0.0,
@@ -99,7 +110,7 @@
         "final_price": 333.69
     },
     {
-        "product": "Maurice iCIEF / Consumables - Cart",
+        "product": "Maurice icIEF / Consumables - Cart",
         "current_price": 1638.16,
         "inflation": 0.04,
         "cost_change": 0.0,
@@ -141,5 +152,16 @@
         "elasticity_adj": 0.0,
         "total_adj": 0.04,
         "final_price": 3705.21
+    },
+    {
+        "product": "iCE3 / Service Contracts",
+        "current_price": 5868.51,
+        "inflation": 0.04,
+        "cost_change": 0.0,
+        "elasticity": 2.62,
+        "elasticity_tier": "Highly Inelastic",
+        "elasticity_adj": 0.03,
+        "total_adj": 0.07,
+        "final_price": 6279.31
     }
 ]

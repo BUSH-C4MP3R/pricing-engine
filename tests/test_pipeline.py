@@ -10,7 +10,7 @@ class TestClassifier(unittest.TestCase):
     def test_maurice_cart(self):
         self.assertEqual(
             classify({"ItemCode": "090-101", "ItemDesc": "Maurice cIEF Cartridge"}),
-            "Maurice iCIEF / Consumables - Cart")
+            "Maurice icIEF / Consumables - Cart")
 
     def test_maurice_generic_consumable_stays_unsplit(self):
         self.assertEqual(
@@ -76,7 +76,7 @@ class TestClassifier(unittest.TestCase):
         self.assertEqual(
             classify({"ItemCode": "PS-MC02-F",
                       "ItemDesc": "MauriceFlex cIEF Fractionation Cartridge - 2pk"}),
-            "Maurice iCIEF / Consumables - Cart")
+            "Maurice icIEF / Consumables - Cart")
 
     def test_service_collapses_to_generic_maurice(self):
         # Service isn't split by variant or chemistry, unlike Units/Consumables.
@@ -94,6 +94,11 @@ class TestClassifier(unittest.TestCase):
     def test_ice3_only_units_excluded(self):
         self.assertFalse(is_priceable("iCE3 / Units"))
         self.assertTrue(is_priceable("iCE3 / Consumables"))
+
+    def test_service_contracts_priceable_except_mfi(self):
+        self.assertTrue(is_priceable("Maurice / Service Contracts"))
+        self.assertTrue(is_priceable("iCE3 / Service Contracts"))
+        self.assertFalse(is_priceable("MFI / Service Contracts"))
 
 
 class TestOutputIntegrity(unittest.TestCase):
