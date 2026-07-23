@@ -1,0 +1,9 @@
+[theme]
+# Bio-Techne brand palette, pulled from bio-techne.com's production CSS
+# (bg-bt-blue / text-bt-blue / bg-dark-bt-blue / --Light-Blue utility classes).
+base = "light"
+primaryColor = "#0034b7"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#e8eaf0"
+textColor = "#0c1119"
+font = "sans serif"

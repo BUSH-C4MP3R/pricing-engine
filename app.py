@@ -20,7 +20,64 @@ from engine.categories import is_priceable
 from rag.ingest import MACRO_PATH
 
 st.set_page_config(page_title="Biologics Pricing Engine", layout="wide")
-st.title("Biologics Pricing Model")
+
+# Bio-Techne brand palette (sourced from bio-techne.com's own CSS: bg-bt-blue /
+# text-bt-blue / bg-dark-bt-blue / --Light-Blue utility classes) — the base
+# widget theme lives in .streamlit/config.toml, this covers the masthead and
+# tab accents that config.toml's theme keys can't reach.
+st.markdown(
+    """
+    <style>
+    .bt-header {
+        background-color: #0034b7;
+        padding: 1.1rem 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+    }
+    .bt-header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 1.75rem;
+        letter-spacing: 0.02em;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #e8eaf0;
+        border-radius: 6px 6px 0 0;
+        padding: 8px 20px;
+    }
+    .stTabs [data-baseweb="tab"] p {
+        color: #0034b7;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background-color: #0034b7 !important;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] p {
+        color: #ffffff !important;
+    }
+    .stTabs [data-baseweb="tab-highlight"] {
+        background-color: #00b3e5 !important;
+    }
+    [data-testid="stMetricValue"] {
+        color: #0034b7;
+    }
+    h4 {
+        color: #0034b7;
+    }
+    [data-testid="stExpander"] {
+        border-left: 4px solid #005f9e;
+        border-radius: 4px;
+    }
+    [data-testid="stSidebar"] {
+        background-color: #e8eaf0;
+    }
+    </style>
+    <div class="bt-header"><h1>Biologics Pricing Model</h1></div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 @st.cache_data
@@ -65,6 +122,28 @@ def _sort_results(results):
     OUTPUT_PATH (written by pipeline.py's own alphabetical run) don't."""
     order_index = {cat: i for i, cat in enumerate(CATEGORY_ORDER)}
     return sorted(results, key=lambda r: (order_index.get(r["product"], len(CATEGORY_ORDER)), r["product"]))
+
+
+def _product_line(cat: str) -> str:
+    """'Maurice CE-SDS / Consumables' -> 'Maurice'; 'iCE3 / Service' -> 'iCE3'.
+    Only Maurice* and iCE3 lines are ever priceable (MFI/Other are excluded
+    upstream), so a simple prefix check is sufficient."""
+    return "Maurice" if cat.startswith("Maurice") else "iCE3"
+
+
+CATEGORY_GROUPS = {
+    "Units": "Units",
+    "Consumables": "Consumables",
+    "Consumables - Cart": "Consumables",
+    "Service Contracts": "Service & Contracts",
+    "Service": "Service & Contracts",
+}
+GROUP_ORDER = ["Units", "Consumables", "Service & Contracts"]
+
+
+def _category_group(cat: str) -> str:
+    _, _, suffix = cat.partition(" / ")
+    return CATEGORY_GROUPS.get(suffix, suffix)
 
 
 if "macro_extracted" not in st.session_state:
@@ -177,19 +256,28 @@ if results is None and os.path.exists(OUTPUT_PATH):
 
 if results:
     results = _sort_results(results)
-    st.subheader("Pricing Summary")
-    summary_rows = [{k: v for k, v in r.items() if k != "cost_change"} for r in results]
-    st.dataframe(summary_rows, use_container_width=True)
-
-    st.subheader("Detailed Breakdown")
-    for r in results:
-        with st.expander(f"{r['product']}  →  Final Price: ${r['final_price']:.2f}"):
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Current Price", f"${r['current_price']:.2f}")
-            col1.metric("Inflation", f"{r['inflation'] * 100:+.1f}%")
-            col2.metric("Elasticity", f"{r['elasticity']}", help=r["elasticity_tier"])
-            col2.metric("Elasticity Adj", f"{r['elasticity_adj'] * 100:+.1f}%")
-            col3.metric("Total Adjustment", f"{r['total_adj'] * 100:+.1f}%")
-            col3.metric("Elasticity Tier", r["elasticity_tier"])
+    tab_maurice, tab_ice3 = st.tabs(["Maurice", "iCE3"])
+    for tab, line in ((tab_maurice, "Maurice"), (tab_ice3, "iCE3")):
+        with tab:
+            line_results = [r for r in results if _product_line(r["product"]) == line]
+            if not line_results:
+                st.info(f"No priced categories for {line}.")
+                continue
+            for group in GROUP_ORDER:
+                group_results = [r for r in line_results if _category_group(r["product"]) == group]
+                if not group_results:
+                    continue
+                st.markdown(f"#### {group}")
+                summary_rows = [{k: v for k, v in r.items() if k != "cost_change"} for r in group_results]
+                st.dataframe(summary_rows, use_container_width=True)
+                for r in group_results:
+                    with st.expander(f"{r['product']}  →  Final Price: ${r['final_price']:.2f}"):
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Current Price", f"${r['current_price']:.2f}")
+                        col1.metric("Inflation", f"{r['inflation'] * 100:+.1f}%")
+                        col2.metric("Elasticity", f"{r['elasticity']}", help=r["elasticity_tier"])
+                        col2.metric("Elasticity Adj", f"{r['elasticity_adj'] * 100:+.1f}%")
+                        col3.metric("Total Adjustment", f"{r['total_adj'] * 100:+.1f}%")
+                        col3.metric("Elasticity Tier", r["elasticity_tier"])
 else:
     st.info("No pricing results yet — click 'Run Pricing' above.")
