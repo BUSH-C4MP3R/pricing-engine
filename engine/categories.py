@@ -40,7 +40,7 @@ def _maurice_sub_line(d: str, mode: str) -> str:
     just what the description mentions:
     - Units: instrument variant ('Maurice C.' / 'Maurice S.' / 'Maurice Flex')
       — PM/RQ/IQ-OQ pricing and the instrument itself are tied to a specific
-      model.
+      model. The base model (no variant keyword) is labeled 'Maurice OBM'.
     - Consumables (+ Cart): chemistry ('Maurice CE-SDS' / 'Maurice icIEF') —
       the same instrument runs either assay, and they show different
       elasticity, but a cartridge/reagent isn't tied to one instrument model.
@@ -55,7 +55,8 @@ def _maurice_sub_line(d: str, mode: str) -> str:
             return "Maurice C."
         if "maurice s." in d:
             return "Maurice S."
-    elif mode == "chemistry":
+        return "Maurice OBM"
+    if mode == "chemistry":
         if "ce-sds" in d:
             return "Maurice CE-SDS"
         if "cief" in d:
@@ -235,7 +236,7 @@ FULLY_DISCONTINUED_LINES = {"MFI"}
 
 
 def is_priceable(prod_group: str) -> bool:
-    """'Maurice / Units' -> True. Excluded: MFI entirely (fully discontinued),
+    """'Maurice OBM / Units' -> True. Excluded: MFI entirely (fully discontinued),
     and iCE3's Units specifically (discontinued instrument, Consumables/
     Service/Service Contracts remain active). Service Contracts are priced
     independently now that real Silver/Gold/Platinum plan data exists (see

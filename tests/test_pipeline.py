@@ -42,6 +42,14 @@ class TestClassifier(unittest.TestCase):
             classify({"ItemCode": "090-002", "ItemDesc": "Maurice C."}),
             "Maurice C. / Units")
 
+    def test_maurice_base_unit_is_obm(self):
+        # The base instrument (no C./S./Flex variant named) is labeled OBM
+        # for Units specifically — unlike Consumables/Service, which stay
+        # plain 'Maurice' when no chemistry/variant is named.
+        self.assertEqual(
+            classify({"ItemCode": "090-000", "ItemDesc": "Maurice"}),
+            "Maurice OBM / Units")
+
     def test_service_contract_tier_in_code(self):
         self.assertEqual(
             classify({"ItemCode": "C-MFI-GOLD", "ItemDesc": "MFI Gold Service Plan"}),
