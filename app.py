@@ -135,9 +135,7 @@ def _load_df():
 CATEGORY_ORDER = [
     "Maurice S. / Units",
     "Maurice C. / Units",
-    "Maurice C. OBM / Units",
     "Maurice / Units",
-    "Maurice OBM / Units",
     "Maurice Flex / Units",
     "Maurice / Consumables",
     "Maurice CE-SDS / Consumables",

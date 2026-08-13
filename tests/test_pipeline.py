@@ -42,22 +42,22 @@ class TestClassifier(unittest.TestCase):
             classify({"ItemCode": "090-002", "ItemDesc": "Maurice C."}),
             "Maurice C. / Units")
 
-    def test_maurice_base_unit_no_obm(self):
+    def test_maurice_base_unit(self):
         self.assertEqual(
             classify({"ItemCode": "090-000", "ItemDesc": "Maurice"}),
             "Maurice / Units")
 
-    def test_maurice_base_unit_is_obm(self):
-        # 'OBM' is an orthogonal configuration flag on the base/C. models
-        # only (not S./Flex) — six distinct Units variants total.
+    def test_maurice_obm_groups_with_base(self):
+        # 'OBM' configuration items group back in with their non-OBM
+        # counterpart rather than splitting into a separate variant.
         self.assertEqual(
             classify({"ItemCode": "090-153", "ItemDesc": "Maurice - OBM"}),
-            "Maurice OBM / Units")
+            "Maurice / Units")
 
-    def test_maurice_c_obm_unit(self):
+    def test_maurice_c_obm_groups_with_c(self):
         self.assertEqual(
             classify({"ItemCode": "090-154", "ItemDesc": "Maurice C. - OBM"}),
-            "Maurice C. OBM / Units")
+            "Maurice C. / Units")
 
     def test_service_contract_tier_in_code(self):
         self.assertEqual(

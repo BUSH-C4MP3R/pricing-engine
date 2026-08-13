@@ -38,12 +38,11 @@ ICE3_SPECIFIC_ITEMS = {
 def _maurice_sub_line(d: str, mode: str) -> str:
     """Maurice sub-classification depends on WHAT is being classified, not
     just what the description mentions:
-    - Units: instrument variant, six SKUs confirmed against actual ItemDesc
-      text ('090-000' "Maurice" vs '090-153' "Maurice - OBM", '090-002'
-      "Maurice C." vs '090-154' "Maurice C. - OBM", etc.) — 'OBM' is an
-      orthogonal configuration flag that only shows up on the base and C.
-      models in this dataset, not S. or Flex:
-        Maurice Flex, Maurice OBM, Maurice, Maurice C. OBM, Maurice C., Maurice S.
+    - Units: instrument variant ('Maurice C.' / 'Maurice S.' / 'Maurice Flex')
+      — PM/RQ/IQ-OQ pricing and the instrument itself are tied to a specific
+      model. 'OBM' configuration items (e.g. '090-153' "Maurice - OBM",
+      '090-154' "Maurice C. - OBM") are grouped back in with their non-OBM
+      counterpart ('Maurice' / 'Maurice C.') rather than split out separately.
     - Consumables (+ Cart): chemistry ('Maurice CE-SDS' / 'Maurice icIEF') —
       the same instrument runs either assay, and they show different
       elasticity, but a cartridge/reagent isn't tied to one instrument model.
@@ -55,10 +54,10 @@ def _maurice_sub_line(d: str, mode: str) -> str:
         if "mauriceflex" in d:
             return "Maurice Flex"
         if "maurice c." in d:
-            return "Maurice C. OBM" if "obm" in d else "Maurice C."
+            return "Maurice C."
         if "maurice s." in d:
             return "Maurice S."
-        return "Maurice OBM" if "obm" in d else "Maurice"
+        return "Maurice"
     if mode == "chemistry":
         if "ce-sds" in d:
             return "Maurice CE-SDS"
